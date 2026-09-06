@@ -34,6 +34,8 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
+app.get('/api/v', (req, res) => res.json({ version: 'v3.5_verification_active' }));
+
 // Google Search Verification & SEO Routes (Must be before express.static to avoid CDN caching)
 app.get('/googlei9oZs_iDLKiy_tCnXNpWFc_8RwKChuzYvBGaAgc6f0A.html', (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
