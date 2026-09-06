@@ -1,0 +1,55 @@
+[
+  {
+    "id": "msg_1788675665653",
+    "name": "sdfas",
+    "email": "rayhan758535@gmail.com",
+    "subject": "General Inquiry",
+    "message": "Host your website with PHP, MySQL and free SSL certificates. No ads on your site, no credit card, and no expiry date.",
+    "recipient": "rayhanvision@gmail.com",
+    "timestamp": "2026-09-06T06:21:05.653Z"
+  },
+  {
+    "id": "msg_1788675612333",
+    "name": "Rayhan",
+    "email": "rayhan758535@gmail.com",
+    "subject": "General Inquiry",
+    "message": "Host your website with PHP, MySQL and free SSL certificates. No ads on your site, no credit card, and no expiry date.",
+    "recipient": "rayhanvision@gmail.com",
+    "timestamp": "2026-09-06T06:20:12.333Z"
+  },
+  {
+    "id": "msg_1788675432675",
+    "name": "dgg",
+    "email": "shanoarulalamvtl@gmail.com",
+    "subject": "Broken Link Report",
+    "message": "asdfasfsfaasfd",
+    "recipient": "rayhanvision@gmail.com",
+    "timestamp": "2026-09-06T06:17:12.675Z"
+  },
+  {
+    "id": "msg_1788675389865",
+    "name": "Rayhan Test",
+    "email": "test@example.com",
+    "subject": "Broken Link Report",
+    "message": "Testing live email relay to rayhanvision@gmail.com",
+    "recipient": "rayhanvision@gmail.com",
+    "timestamp": "2026-09-06T06:16:29.865Z"
+  },
+  {
+    "id": "msg_1788675303915",
+    "name": "dadfasf",
+    "email": "ras@gmail.com",
+    "subject": "Broken Link Report",
+    "message": "adsfasfd",
+    "recipient": "rayhanvision@gmail.com",
+    "timestamp": "2026-09-06T06:15:03.915Z"
+  },
+  {
+    "id": "msg_1788674685712",
+    "name": "Test User",
+    "email": "test@example.com",
+    "subject": "General Inquiry",
+    "message": "Testing contact form",
+    "timestamp": "2026-09-06T06:04:45.712Z"
+  }
+]

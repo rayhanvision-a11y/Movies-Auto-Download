@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOVIESFLIX | Direct 1080p Auto-Downloader Engine</title>
+  <!-- Tailwind CSS with Custom #fb4c01 Theme -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#fb4c01',
+              50: '#fff5f0',
+              100: '#ffe8dc',
+              200: '#ffd0b8',
+              300: '#ffb08a',
+              400: '#ff8652',
+              500: '#fb4c01',
+              600: '#e03d00',
+              700: '#ba2e00',
+              800: '#942605',
+              900: '#772209',
+              950: '#400e02'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Vue 3 (Local Zero-Latency Engine) -->
+  <script src="/vendor/vue.global.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans'] min-h-screen flex flex-col">
+
+  <div id="app" class="flex-grow flex flex-col" v-cloak>
+    
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-brand-500/20 glass-nav sticky top-0 z-40 shadow-2xl">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 sm:gap-6">
+        
+        <!-- Public App Brand Logo (Left) -->
+        <div class="flex items-center gap-3 cursor-pointer shrink-0 py-1" @click="loadHomeFeed()">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#fb4c01] to-[#ff8652] flex items-center justify-center shadow-lg shadow-brand-500/40 border border-brand-400/50 hover:scale-105 transition-transform">
+            <i class="fa-solid fa-clapperboard text-slate-950 text-xl font-black"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-1 leading-none">
+              <span>MOVIES</span><span class="text-brand-500">FLIX</span>
+            </span>
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5">Ad-Free 1080p Engine</span>
+          </div>
+        </div>
+
+        <!-- Navigation Menu (Far Right) -->
+        <nav class="flex items-center space-x-2 sm:space-x-3">
+          <button @click="loadHomeFeed()" 
+                  class="px-4 py-2 text-xs font-bold rounded-xl bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 border border-brand-500/40 transition-all flex items-center gap-1.5 shadow-sm shadow-brand-950"
+                  title="View Aggregated Home Feed">
+            <i class="fa-solid fa-house text-brand-400"></i>
+            <span>Home Feed</span>
+          </button>
+          <button @click="openFTPModal()" 
+                  class="px-4 py-2 text-xs font-semibold rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-tower-cell text-amber-400"></i>
+            <span>FTP Servers</span>
+          </button>
+          <button @click="openSiteModal()" 
+                  class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-gear text-brand-400"></i>
+            <span>Sites ({{ sites.length }})</span>
+          </button>
+          <button @click="openContactModal()" 
+                  class="px-4 py-2 text-xs font-semibold rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-envelope text-violet-400"></i>
+            <span>Contact Us</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+      
+      <!-- Direct Movie/Series URL Link Extractor Card -->
+      <div class="bg-gradient-to-b from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-brand-500/25 shadow-2xl shadow-slate-950/50 mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <label class="block text-sm font-bold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-brand-500"></i>
+            Direct Movie/Series URL Extractor:
+          </label>
+          <span class="text-xs text-slate-400">Paste single post URL to extract 1080p files & ZIPs</span>
+        </div>
+
+        <form @submit.prevent="handleExtract()" class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-grow">
+            <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input type="url" 
+                   v-model="inputUrl" 
+                   placeholder="e.g. https://cinefreak.net/movie-name-download-1080p/"
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+          </div>
+          <button type="submit" 
+                  :disabled="extractLoading"
+                  class="px-6 py-3.5 bg-gradient-to-r from-[#fb4c01] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-w-[170px]">
+            <i v-if="extractLoading" class="fa-solid fa-spinner animate-spin"></i>
+            <i v-else class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>{{ extractLoading ? 'Extracting...' : 'Bypass & Extract' }}</span>
+          </button>
+        </form>
+
+        <!-- Quick Test Templates & Live Stats -->
+        <div class="mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-400 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-bolt-lightning text-amber-400 text-[11px]"></i> Test Sites:
+            </span>
+            <button v-for="site in sites" :key="site.id" 
+                    @click="inputUrl = 'https://' + site.domain; handleExtract()" 
+                    class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-slate-950/80 hover:bg-brand-500/20 text-brand-300 border border-slate-800 hover:border-brand-500/40 transition-all flex items-center gap-1">
+              <i class="fa-solid fa-play text-[8px] text-brand-400"></i> {{ site.name }}
+            </button>
+          </div>
+
+          <!-- Live System Metrics -->
+          <div class="flex items-center gap-3 text-xs text-slate-400 self-end md:self-auto">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-globe text-emerald-400 text-[10px]"></i>
+              <span>Active Sites: <strong class="text-slate-200">{{ sites.length }}</strong></span>
+            </span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 flex items-center gap-1.5" @click="loadWatchlistFeed()" style="cursor: pointer;">
+              <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+              <span>Watchlist: <strong class="text-slate-200">{{ watchlist.length }}</strong></span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-16 bg-slate-900/30 rounded-2xl border border-slate-800/60 my-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-500/15 text-brand-400 mb-4 animate-bounce">
+          <i class="fa-solid fa-shield-cat text-3xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-200">Removing Ads & Popups in Real-Time...</h3>
+        <p class="text-sm text-slate-400 mt-1">Extracting movie title, quality variants, and unmasking direct download links</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="bg-rose-950/40 border border-rose-800/80 text-rose-200 p-4 rounded-xl mb-6 flex items-start gap-3">
+        <i class="fa-solid fa-circle-exclamation text-rose-400 text-lg mt-0.5"></i>
+        <div>
+          <h4 class="font-semibold text-sm">Extraction Failed</h4>
+          <p class="text-xs text-rose-300/90 mt-0.5">{{ error }}</p>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div v-if="movieData && !loading" class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl mb-8">
+        
+        <!-- Header Banner -->
+        <div class="p-6 bg-gradient-to-r from-slate-900 via-brand-950/30 to-slate-900 border-b border-slate-800 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+          <div class="flex items-center gap-5 min-w-0">
+            <div v-if="movieData.poster" class="w-24 h-32 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg flex-shrink-0 flex items-center justify-center">
+              <img :src="'/api/image-proxy?url=' + encodeURIComponent(movieData.poster)" :alt="movieData.title" referrerpolicy="no-referrer" class="w-full h-full object-cover">
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <button v-if="!movieData.isListing" @click="goBackToListing()" 
+                        class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-brand-500/20 hover:bg-brand-500/35 text-brand-200 border border-brand-500/40 transition-all flex items-center gap-1">
+                  <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to Posts
+                </button>
+                <span class="px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider rounded-md bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                  {{ movieData.siteName }}
+                </span>
+                <span v-if="movieData.isListing" class="px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <i class="fa-solid fa-layer-group text-[9px] mr-1"></i> Site Movie Posts View
+                </span>
+                <span v-else class="px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <i class="fa-solid fa-check text-[9px] mr-1"></i> All Qualities (4K, 1080p, 720p, 480p)
+                </span>
+              </div>
+              <h2 class="text-xl md:text-2xl font-bold text-white leading-tight truncate">
+                {{ movieData.title }}
+              </h2>
+              <p class="text-xs text-slate-400 mt-2 flex items-center gap-4">
+                <span v-if="movieData.isListing"><i class="fa-solid fa-clapperboard text-brand-400 mr-1"></i> Movie Posts Found: <strong class="text-white">{{ movieData.posts ? movieData.posts.length : 0 }}</strong></span>
+                <span v-else><i class="fa-solid fa-file-video text-emerald-400 mr-1"></i> Direct File Links: <strong class="text-white">{{ movieData.totalFound }}</strong></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons (For Direct Download View vs Site Posts View) -->
+          <div class="w-full md:w-auto flex flex-wrap items-center gap-3">
+            <button v-if="!movieData.isListing" @click="goBackToListing()" 
+                    class="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-brand-300 font-bold text-xs rounded-xl border border-slate-700/80 shadow transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>← Back to Movie Posts</span>
+            </button>
+
+            <button v-if="!movieData.isListing && movieData.downloads && movieData.downloads.length" @click="exportIDMList()" 
+                    class="w-full sm:w-auto px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-600/20 transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-file-arrow-down"></i>
+              <span>Export IDM List (.ef2)</span>
+            </button>
+
+            <button v-if="!movieData.isListing && movieData.downloads && movieData.downloads.length" @click="sendAllToIDM()" 
+                    class="w-full sm:w-auto px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-cyan-600/20 transition-all flex items-center justify-center gap-2"
+                    title="Send all 1080p links directly to Windows IDM queue">
+              <i class="fa-solid fa-rocket"></i>
+              <span>Send All to IDM Queue ({{ movieData.downloads.length }})</span>
+            </button>
+
+            <button v-if="!movieData.isListing && movieData.downloads && movieData.downloads.length" @click="downloadAll()" 
+                    class="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-download"></i>
+              <span>1-Click Download All</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- MODE 1: Movie Posts Grid View (When site listing is searched) -->
+        <div v-if="movieData.isListing" class="p-6">
+          
+          <!-- Interactive Filter & Search Bar -->
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800/80">
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button @click="setFilter('all')" 
+                      class="px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                      :class="activeFilter === 'all' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30' : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 border border-slate-800'">
+                <i class="fa-solid fa-border-all text-[10px]"></i>
+                <span>All ({{ totalPostsCount }})</span>
+              </button>
+              <button @click="setFilter('movie')" 
+                      class="px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                      :class="activeFilter === 'movie' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 border border-slate-800'">
+                <i class="fa-solid fa-film text-[10px]"></i>
+                <span>Movies ({{ moviesCount }})</span>
+              </button>
+              <button @click="setFilter('series')" 
+                      class="px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                      :class="activeFilter === 'series' ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 border border-slate-800'">
+                <i class="fa-solid fa-tv text-[10px]"></i>
+                <span>TV Series ({{ seriesCount }})</span>
+              </button>
+              <button @click="loadWatchlistFeed()" 
+                      class="px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                      :class="movieData.isWatchlist ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30' : 'bg-slate-950/80 text-amber-400 hover:text-amber-300 border border-slate-800'">
+                <i class="fa-solid fa-star text-[10px]"></i>
+                <span>Watchlist ({{ watchlist.length }})</span>
+              </button>
+            </div>
+
+            <!-- In-Feed Live Title Search -->
+            <div class="relative min-w-[240px]">
+              <i class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="text" 
+                     v-model="filterSearchQuery" 
+                     placeholder="Filter loaded titles..." 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-8 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-all">
+              <button v-if="filterSearchQuery" @click="filterSearchQuery = ''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>          <div id="posts-grid-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div v-for="post in paginatedPosts" :key="post.id"
+                 class="movie-card-luxury bg-gradient-to-b from-[#161f36]/90 via-[#0f172a]/95 to-[#090d16] border border-slate-700/60 hover:border-brand-500/70 rounded-2xl overflow-hidden p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_15px_40px_-10px_rgba(251,76,1,0.3)] flex flex-col justify-between group relative">
+              
+              <!-- Premium Card Top Glow Accent -->
+              <div class="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              <div>
+                <!-- Poster Banner Frame (Aspect 2/3 for authentic movie poster look) -->
+                <div class="h-72 sm:h-80 lg:h-96 bg-slate-950 rounded-xl overflow-hidden mb-3.5 relative flex items-center justify-center border border-slate-800/80 shadow-inner group-hover:border-slate-700 transition-colors">
+                  
+                  <!-- Subtle Poster Vignette Overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#090d16] via-transparent to-black/40 opacity-90 z-10 pointer-events-none"></div>
+
+                  <!-- Top Left Badges (Site Name / NEW EPISODE) -->
+                  <span v-if="hasNewEpisode(post)" 
+                        class="absolute top-3 left-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 text-[11px] font-black px-3 py-1 rounded-full shadow-lg shadow-cyan-950/80 backdrop-blur-md z-20 border border-cyan-300 animate-pulse uppercase tracking-wider">
+                    <i class="fa-solid fa-bolt mr-1"></i> NEW EPISODE!
+                  </span>
+                  <span v-else-if="post.siteName" 
+                        class="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md text-amber-300 text-[11px] font-extrabold px-3 py-1 rounded-xl shadow-md border border-amber-500/30 z-20 flex items-center gap-1.5">
+                    <i class="fa-solid fa-globe text-[10px] text-amber-400"></i> {{ post.siteName }}
+                  </span>
+
+                  <!-- Top Right Watchlist Star Button -->
+                  <button @click.stop="toggleWatchlist(post)" 
+                          class="absolute top-3 right-3 w-9 h-9 rounded-full bg-slate-950/90 backdrop-blur-md border border-slate-700/80 text-amber-400 flex items-center justify-center shadow-lg hover:border-amber-400 hover:scale-115 active:scale-90 transition-all z-20"
+                          :title="isWatchlisted(post) ? 'Remove from Watchlist' : 'Add to Watchlist'">
+                    <i :class="isWatchlisted(post) ? 'fa-solid fa-star text-amber-400 text-sm drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'fa-regular fa-star text-slate-400 hover:text-amber-300 text-sm'"></i>
+                  </button>
+
+                  <!-- Bottom Left ContentType Badge (Movie vs Series) -->
+                  <span v-if="post.contentType === 'series'" 
+                        class="absolute bottom-3 left-3 bg-purple-950/90 backdrop-blur-md text-fuchsia-300 text-[11px] font-black px-3 py-1 rounded-xl border border-purple-500/50 uppercase tracking-wider z-20 flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-tv text-[10px]"></i> Series
+                  </span>
+                  <span v-else 
+                        class="absolute bottom-3 left-3 bg-emerald-950/90 backdrop-blur-md text-emerald-300 text-[11px] font-black px-3 py-1 rounded-xl border border-emerald-500/50 uppercase tracking-wider z-20 flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-film text-[10px]"></i> Movie
+                  </span>
+
+                  <!-- Bottom Right Season / Episode Badge (Vibrant Glowing Amber Tag) -->
+                  <span v-if="post.episodeTag" 
+                        class="absolute bottom-3 right-3 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-slate-950 text-[11px] font-black px-3 py-1 rounded-xl shadow-lg shadow-orange-950/80 backdrop-blur-md z-20 border border-amber-200 uppercase tracking-wide">
+                    <i class="fa-solid fa-play text-[9px] mr-1"></i> {{ post.episodeTag }}
+                  </span>
+
+                  <!-- Poster Image with Smooth Zoom -->
+                  <img v-if="post.poster" 
+                       :src="'/api/image-proxy?url=' + encodeURIComponent(post.poster)" 
+                       :alt="post.title" 
+                       referrerpolicy="no-referrer" 
+                       loading="lazy" 
+                       class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out">
+                  <i v-else class="fa-solid fa-film text-6xl text-slate-800"></i>
+                </div>
+
+                <!-- Title Header -->
+                <h4 class="text-base font-black text-white line-clamp-2 leading-snug group-hover:text-brand-400 transition-colors tracking-tight min-h-[3rem] px-0.5">
+                  {{ post.title }}
+                </h4>
+              </div>
+
+              <!-- Action Buttons Container -->
+              <div class="space-y-2.5 mt-4 pt-3 border-t border-slate-800/80">
+                
+                <!-- Primary Action CTA Button: Extract Download Files -->
+                <button @click="extractSpecificPost(post.postUrl)" 
+                        class="w-full py-3 px-4 bg-gradient-to-r from-[#fb4c01] via-[#f97316] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white text-xs font-black rounded-xl shadow-lg shadow-brand-500/25 hover:shadow-brand-500/50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
+                  <i class="fa-solid fa-bolt text-white text-xs animate-bounce"></i>
+                  <span>Extract Download Files</span>
+                </button>
+
+                <!-- Secondary Controls Bar (Side by Side) -->
+                <div class="flex items-center gap-2">
+                  <!-- Watched Toggle Button -->
+                  <button @click="toggleWatched(post)" 
+                          class="flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 border shadow-sm"
+                          :class="isWatched(post) ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/60 hover:bg-emerald-900/90' : 'bg-slate-950/90 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'">
+                    <i :class="isWatched(post) ? 'fa-solid fa-circle-check text-emerald-400 text-xs' : 'fa-regular fa-circle text-slate-500 text-xs'"></i>
+                    <span>{{ isWatched(post) ? 'Watched' : 'Mark Watched' }}</span>
+                  </button>
+
+                  <!-- Open Post Page Button -->
+                  <a :href="post.postUrl" target="_blank" rel="noopener noreferrer"
+                     class="py-2 px-3.5 bg-slate-950/90 hover:bg-slate-800 text-slate-300 hover:text-amber-400 text-xs font-bold rounded-xl border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-center gap-1.5"
+                     title="Open original post page in browser">
+                    <span>Source</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Pagination Bar (Responsive & Clickable Across All Modes) -->
+          <div v-if="totalPages > 1" class="mt-8 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-xs text-slate-400">
+              Showing <strong class="text-white">{{ totalPostsCount }}</strong> posts (Page <strong class="text-brand-300">{{ currentPage }}</strong> of {{ totalPages }})
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button @click="changePage(currentPage - 1)" 
+                      :disabled="currentPage <= 1"
+                      class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 border border-slate-700/60 transition-all flex items-center gap-1">
+                <i class="fa-solid fa-chevron-left text-[10px]"></i> Previous
+              </button>
+
+              <button v-for="p in pageNumbers" :key="p"
+                      @click="changePage(p)"
+                      class="px-3 py-1.5 text-xs font-bold rounded-lg border transition-all"
+                      :class="currentPage === p ? 'bg-brand-500 border-brand-500 text-white shadow-lg shadow-brand-500/30' : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'">
+                {{ p }}
+              </button>
+
+              <button @click="changePage(currentPage + 1)" 
+                      :disabled="currentPage >= totalPages"
+                      class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 border border-slate-700/60 transition-all flex items-center gap-1">
+                Next <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODE 2: Direct File Download View (All Qualities) -->
+        <div v-else class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-slate-300">
+              Extracted Direct Files (4K, 1080p, 720p, 480p):
+            </h3>
+            <button @click="handleExtract(movieData.targetUrl)" class="text-xs text-brand-400 hover:underline">
+              <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Extraction
+            </button>
+          </div>
+
+          <div v-if="!movieData.downloads || !movieData.downloads.length" class="text-center py-10 text-slate-500">
+            <i class="fa-solid fa-file-excel text-3xl mb-2 text-rose-500/80"></i>
+            <p class="text-sm font-medium text-slate-300">No direct download files found on this page.</p>
+          </div>
+
+          <div v-else-if="movieData.downloads && movieData.downloads.length" class="grid grid-cols-1 gap-3">
+            <div v-for="(dl, idx) in movieData.downloads" :key="dl.id"
+                 class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-brand-500/40 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              
+              <div class="flex items-start sm:items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-brand-500/15 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                  #{{ idx + 1 }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                      {{ dl.quality }}
+                    </span>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <i class="fa-solid fa-file-video text-[9px] mr-1"></i> Direct File (.MKV / .MP4)
+                    </span>
+                  </div>
+                  <h4 v-if="dl.movieTitle" class="text-xs text-brand-300 font-semibold mt-1 truncate">
+                    {{ dl.movieTitle }}
+                  </h4>
+                  <h4 class="text-sm font-bold text-slate-100 mt-0.5 truncate">
+                    {{ dl.label }}
+                  </h4>
+                  
+                  <div class="mt-1 space-y-0.5 text-[11px] text-slate-400">
+                    <p class="truncate text-brand-300/80 flex items-center gap-1.5" v-if="dl.postUrl">
+                      <i class="fa-solid fa-newspaper text-[10px] text-brand-400"></i>
+                      <span><strong>Movie Post URL:</strong> <a :href="dl.postUrl" target="_blank" class="hover:underline text-brand-300">{{ dl.postUrl }}</a></span>
+                    </p>
+                    <p class="truncate text-slate-500 flex items-center gap-1.5">
+                      <i class="fa-solid fa-link text-[10px] text-slate-500"></i>
+                      <span><strong>File Target:</strong> {{ dl.downloadUrl }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                <a v-if="dl.postUrl" :href="dl.postUrl" target="_blank" rel="noopener noreferrer"
+                   class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-brand-300 border border-slate-700/60 transition-all flex items-center gap-1.5"
+                   title="Open Original Movie Post Page">
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                  <span>Post Page</span>
+                </a>
+                <button @click="copyToClipboard(dl.downloadUrl)" 
+                        class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-all flex items-center gap-1.5">
+                  <i class="fa-regular fa-copy"></i>
+                  <span>Copy URL</span>
+                </button>
+                <button @click="sendDirectToIDM(dl)" 
+                        class="px-4 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-md shadow-cyan-500/30 transition-all flex items-center gap-1.5"
+                        title="Directly launch Windows IDM Application to start download">
+                  <i class="fa-solid fa-rocket"></i>
+                  <span>🚀 Send Directly to IDM</span>
+                </button>
+                <a :href="getDownloadHref(dl)" 
+                   download
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-all flex items-center gap-1.5"
+                   title="Click to Download in Browser / IDM">
+                  <i class="fa-solid fa-download"></i>
+                  <span>Browser Link (.MKV)</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Site Management Modal (Add, Edit, Delete Sites) -->
+    <div v-if="showSiteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-brand-400"></i>
+            Manage Movie Download Sites
+          </h3>
+          <button @click="showSiteModal = false" class="text-slate-400 hover:text-white text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto space-y-6 flex-grow">
+          
+          <!-- Add / Edit Site Form -->
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <h4 class="text-sm font-bold text-brand-400 mb-3 flex items-center gap-2">
+              <i class="fa-solid" :class="editingSiteId ? 'fa-pen-to-square' : 'fa-plus'"></i>
+              {{ editingSiteId ? 'Edit Site Configuration' : 'Add New Movie Site Rule' }}
+            </h4>
+
+            <form @submit.prevent="saveSite" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 mb-1">Site Name:</label>
+                  <input type="text" v-model="siteForm.name" required placeholder="e.g. CineFreak" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 mb-1">Site Domain / URL:</label>
+                  <input type="text" v-model="siteForm.domain" required placeholder="e.g. cinefreak.net" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-2 pt-2">
+                <button v-if="editingSiteId" type="button" @click="resetSiteForm()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white">Cancel Edit</button>
+                <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#fb4c01] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white text-xs font-bold rounded-lg shadow-md shadow-brand-500/30">
+                  {{ editingSiteId ? 'Update Site' : 'Add Site' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Existing Sites List -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Configured Movie Sites ({{ sites.length }})</h4>
+            <div class="space-y-2">
+              <div v-for="site in sites" :key="site.id" class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <strong class="text-slate-200 text-sm">{{ site.name }}</strong>
+                  <span class="text-brand-300 bg-brand-500/10 px-2.5 py-0.5 rounded-md font-mono text-[11px] border border-brand-500/20">{{ site.domain }}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button @click="editSite(site)" class="p-2 text-slate-400 hover:text-brand-400 transition-colors" title="Edit Site"><i class="fa-solid fa-pen"></i></button>
+                  <button @click="removeSite(site.id)" class="p-2 text-slate-400 hover:text-rose-400 transition-colors" title="Delete Site"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- FTP Server Discovery Modal -->
+    <div v-if="showFTPModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+              <i class="fa-solid fa-tower-cell"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">Bangladesh & Free FTP Movie Server Finder</h3>
+              <p class="text-[11px] text-slate-400">Discover live FTP servers, test accessibility, & add to your custom sites list</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button @click="scanFTPServers()" 
+                    :disabled="loadingFTP"
+                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-amber-300 font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-1.5 disabled:opacity-50">
+              <i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': loadingFTP}"></i>
+              <span>Re-Scan All</span>
+            </button>
+            <button @click="showFTPModal = false" class="text-slate-400 hover:text-white p-1">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto space-y-4 flex-grow">
+          <div v-if="loadingFTP" class="text-center py-12">
+            <i class="fa-solid fa-spinner animate-spin text-3xl text-amber-400 mb-3"></i>
+            <p class="text-xs text-slate-300 font-semibold">Scanning 15+ Bangladesh BDIX & Public FTP Movie Servers...</p>
+            <p class="text-[11px] text-slate-500 mt-1">Testing server pings, timeouts, and live HTTP responses</p>
+          </div>
+
+          <div v-if="!loadingFTP && ftpServers && ftpServers.length" class="space-y-3">
+            <div v-for="srv in ftpServers" :key="srv.id" 
+                 class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-slate-700 transition-all">
+              
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <strong class="text-slate-100 text-sm">{{ srv.name }}</strong>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold border"
+                        :class="srv.status === 'Online' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'">
+                    <i class="fa-solid" :class="srv.status === 'Online' ? 'fa-circle-check text-emerald-400' : 'fa-circle-xmark text-slate-500'"></i>
+                    <span>{{ srv.status }}</span>
+                    <span v-if="srv.status === 'Online'">({{ srv.pingMs }}ms)</span>
+                  </span>
+                  <span v-if="fastestFtpServer && fastestFtpServer.id === srv.id" 
+                        class="px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[10px] font-black border border-emerald-300 shadow-md animate-pulse">
+                    <i class="fa-solid fa-bolt mr-0.5"></i> FASTEST BDIX ({{ srv.pingMs }}ms)
+                  </span>
+                  <span class="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">{{ srv.type }}</span>
+                </div>
+                <p class="text-xs text-indigo-400 font-mono">{{ srv.domain }}</p>
+              </div>
+
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <a :href="srv.url" target="_blank" rel="noopener noreferrer" 
+                   class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-lg border border-slate-800 transition-all flex items-center gap-1">
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                  <span>Test Server</span>
+                </a>
+
+                <button v-if="!srv.isAdded" @click="addFTPServer(srv)" 
+                        class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow transition-all flex items-center gap-1">
+                  <i class="fa-solid fa-plus"></i>
+                  <span>Add to My Sites</span>
+                </button>
+                <span v-else class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20">
+                  <i class="fa-solid fa-check"></i> Added
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer Section with Links: FAQ | Contact | DMCA | Privacy & Live Visitor Stats -->
+    <footer class="border-t border-slate-800/80 bg-slate-950/80 py-6 mt-12">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+          <p class="text-xs text-slate-500 font-medium">
+            © 2026 MOVIESFLIX Engine • Ad-Free Direct Extractor
+          </p>
+
+          <!-- Live Visitor Count Badges (Today, This Week, This Month, Total) -->
+          <div class="flex items-center gap-2 flex-wrap text-xs bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800/80 shadow-lg shadow-black/40">
+            <span class="text-slate-400 font-extrabold flex items-center gap-1.5 pr-1 border-r border-slate-800/80">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span class="text-slate-300 uppercase tracking-widest text-[10px]">Live Visitors</span>
+            </span>
+
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <!-- Today Pill -->
+              <span class="px-2.5 py-1 rounded-xl bg-emerald-950/50 text-emerald-300 font-medium border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                <span class="text-[11px] text-slate-400">Today:</span>
+                <strong class="text-emerald-400 font-black text-xs">{{ visitorStats.today }}</strong>
+              </span>
+
+              <!-- This Week Pill -->
+              <span class="px-2.5 py-1 rounded-xl bg-orange-950/50 text-brand-300 font-medium border border-brand-500/30 flex items-center gap-1.5 shadow-sm">
+                <span class="text-[11px] text-slate-400">This Week:</span>
+                <strong class="text-brand-400 font-black text-xs">{{ visitorStats.thisWeek }}</strong>
+              </span>
+
+              <!-- This Month Pill -->
+              <span class="px-2.5 py-1 rounded-xl bg-purple-950/50 text-purple-300 font-medium border border-purple-500/30 flex items-center gap-1.5 shadow-sm">
+                <span class="text-[11px] text-slate-400">This Month:</span>
+                <strong class="text-purple-300 font-black text-xs">{{ visitorStats.thisMonth }}</strong>
+              </span>
+
+              <!-- Total Pill -->
+              <span class="px-2.5 py-1 rounded-xl bg-blue-950/50 text-blue-300 font-medium border border-blue-500/30 flex items-center gap-1.5 shadow-sm">
+                <span class="text-[11px] text-slate-400">Total:</span>
+                <strong class="text-blue-300 font-black text-xs">{{ visitorStats.total }}</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exact Navigation Links matching user design -->
+        <div class="flex items-center gap-6 text-sm font-semibold text-slate-400">
+          <button @click="openFAQModal()" class="hover:text-white transition-colors">FAQ</button>
+          <button @click="openContactModal()" class="hover:text-white transition-colors">Contact</button>
+          <button @click="openDMCAModal()" class="hover:text-white transition-colors">DMCA</button>
+          <button @click="openPrivacyModal()" class="hover:text-white transition-colors">Privacy</button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Contact Us Modal -->
+    <div v-if="showContactModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-violet-500/20 text-violet-400 flex items-center justify-center border border-violet-500/30">
+              <i class="fa-solid fa-envelope"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">Contact Us & Support</h3>
+              <p class="text-[11px] text-slate-400">Send us feedback, broken link reports, or feature requests</p>
+            </div>
+          </div>
+          <button @click="closeContactModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body / Form -->
+        <form @submit.prevent="submitContactForm()" class="p-6 space-y-4">
+          
+          <div v-if="contactSuccess" class="p-3.5 bg-emerald-950/60 border border-emerald-500/50 rounded-xl text-emerald-200 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            <span>Thank you! Your message has been sent successfully.</span>
+          </div>
+
+          <div v-if="contactError" class="p-3.5 bg-rose-950/60 border border-rose-500/50 rounded-xl text-rose-200 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+            <span>{{ contactError }}</span>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Your Name *</label>
+              <input type="text" v-model="contactForm.name" required placeholder="e.g. John Doe"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Your Email Address *</label>
+              <input type="email" v-model="contactForm.email" required placeholder="e.g. john@example.com"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Subject</label>
+              <select v-model="contactForm.subject"
+                      class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-brand-500 transition-all">
+                <option value="General Inquiry">General Inquiry</option>
+                <option value="Broken Link Report">Broken Link / Extraction Issue</option>
+                <option value="Request New Site">Request New Movie Site Addition</option>
+                <option value="Feedback & Suggestions">Feedback & Suggestions</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Your Message *</label>
+              <textarea v-model="contactForm.message" rows="4" required placeholder="Type your message here..."
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all resize-none"></textarea>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
+            <button type="button" @click="closeContactModal()" 
+                    class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition-all">
+              Cancel
+            </button>
+            <button type="submit" :disabled="contactLoading"
+                    class="px-5 py-2 bg-gradient-to-r from-[#fb4c01] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white text-xs font-bold rounded-xl shadow-md shadow-brand-500/25 transition-all flex items-center gap-1.5 disabled:opacity-50">
+              <i v-if="contactLoading" class="fa-solid fa-spinner animate-spin"></i>
+              <i v-else class="fa-solid fa-paper-plane"></i>
+              <span>{{ contactLoading ? 'Sending...' : 'Send Message' }}</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- FAQ Modal -->
+    <div v-if="showFAQModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+              <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">Frequently Asked Questions (FAQ)</h3>
+              <p class="text-[11px] text-slate-400">Everything you need to know about MOVIESFLIX Engine</p>
+            </div>
+          </div>
+          <button @click="closeFAQModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4 text-xs">
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-slate-100 text-sm text-brand-400">1. What is MOVIESFLIX Auto-Downloader?</h4>
+            <p class="text-slate-300 leading-relaxed">It is a zero-ad, high-speed media link extraction engine. It bypasses aggressive redirects, popups, and shortlinks to grab direct .MKV / .MP4 video download links across all active sites.</p>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-slate-100 text-sm text-brand-400">2. How do I auto-download files directly to Windows IDM?</h4>
+            <p class="text-slate-300 leading-relaxed">Click the <strong class="text-white">Send to IDM</strong> button on any file. The engine will communicate directly with IDMan.exe on your Windows system to add it to your download queue instantly!</p>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-slate-100 text-sm text-brand-400">3. What video resolutions are extracted?</h4>
+            <p class="text-slate-300 leading-relaxed">All video qualities including 4K (2160p), 1080p Full HD, 720p HD, and 480p SD are supported and labeled clearly. HEVC files are filtered out for maximum compatibility.</p>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-slate-100 text-sm text-brand-400">4. How do I use BDIX FTP servers?</h4>
+            <p class="text-slate-300 leading-relaxed">Click <strong class="text-amber-400">FTP Servers</strong> in the top menu to auto-scan active BDIX servers in Bangladesh and add them to your site list.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DMCA Notice Modal -->
+    <div v-if="showDMCAModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">DMCA & Copyright Compliance Policy</h3>
+              <p class="text-[11px] text-slate-400">Digital Millennium Copyright Act Notice</p>
+            </div>
+          </div>
+          <button @click="closeDMCAModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed">
+          <p><strong class="text-white">MOVIESFLIX Engine</strong> operates strictly as a search indexing and direct link parsing utility. We do not host, store, upload, or stream any copyrighted media files on our web servers.</p>
+          
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
+            <h4 class="font-bold text-white text-sm">Copyright Takedown Requests:</h4>
+            <p>If you are a copyright owner or an agent thereof and believe that any index link provided by our engine infringes upon your copyrights, please send a written takedown notice to our official contact email:</p>
+            <div class="p-2.5 bg-slate-900 rounded-lg text-brand-300 font-mono font-bold flex items-center gap-2">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:rayhanvision@gmail.com" class="hover:underline">rayhanvision@gmail.com</a>
+            </div>
+          </div>
+
+          <p>Please allow 24-48 business hours for a response and index removal upon receiving a valid request.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div v-if="showPrivacyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+              <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">Privacy Policy</h3>
+              <p class="text-[11px] text-slate-400">Our commitment to your privacy and data security</p>
+            </div>
+          </div>
+          <button @click="closePrivacyModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed">
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-white text-sm text-emerald-400">1. Zero Ad Tracking & Privacy First</h4>
+            <p>MOVIESFLIX Engine is designed to deliver a completely ad-free experience. We do not track your browsing activity or sell personal data to third parties.</p>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-white text-sm text-emerald-400">2. Local Storage Usage</h4>
+            <p>Your custom site list, watchlist, and watched episode history are stored locally on your device using browser LocalStorage for zero latency.</p>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+            <h4 class="font-bold text-white text-sm text-emerald-400">3. Contact & Support</h4>
+            <p>If you have any questions regarding privacy or data handling, reach out at <a href="mailto:rayhanvision@gmail.com" class="text-brand-300 hover:underline">rayhanvision@gmail.com</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js?v=3.0"></script>
+</body>
+</html>

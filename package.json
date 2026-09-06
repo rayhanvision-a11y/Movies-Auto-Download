@@ -1,0 +1,25 @@
+{
+  "name": "movies-auto-download",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.20.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "nodemailer": "^10.0.0",
+    "puppeteer-core": "^25.9.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

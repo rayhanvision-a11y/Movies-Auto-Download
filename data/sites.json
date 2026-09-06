@@ -1,0 +1,112 @@
+[
+  {
+    "id": "cinefreak",
+    "name": "CineFreak",
+    "domain": "cinefreak.net",
+    "enabled": true,
+    "selectors": {
+      "title": "h1.entry-title, h1.page-title, .title, head title",
+      "poster": ".entry-content img, .post-thumbnail img, article img",
+      "links": ".dlbtn-container a, a[href*='generate.php'], a[href*='cinecloud'], a[href*='hubcloud'], a[href*='drive'], a[href*='download']",
+      "container": ".entry-content, .download-links, article"
+    },
+    "bypassPatterns": [
+      "hubcloud",
+      "drivehub",
+      "pixeldrain",
+      "gdflix",
+      "katdrive",
+      "kolop",
+      "fast-dl",
+      "filepress",
+      "cinecloud"
+    ]
+  },
+  {
+    "id": "movies4u",
+    "name": "Movies4U",
+    "domain": "new5.movies4u.clinic",
+    "enabled": true,
+    "selectors": {
+      "title": "h1.entry-title, .entry-title, h1",
+      "poster": ".entry-content img, .post-thumbnail img",
+      "links": "a[href*='download'], a[href*='link'], a[href*='drive'], .entry-content a[target='_blank']",
+      "container": ".entry-content"
+    },
+    "bypassPatterns": [
+      "hubcloud",
+      "drivehub",
+      "gdflix",
+      "pixeldrain"
+    ]
+  },
+  {
+    "id": "hdhub4u",
+    "name": "HDHub4U",
+    "domain": "new5.hdhub4u.cl",
+    "enabled": true,
+    "selectors": {
+      "title": "h1.entry-title, h1, .title",
+      "poster": ".entry-content img, article img",
+      "links": "a[href*='download'], a[href*='hub'], a[href*='link'], .entry-content a.btn",
+      "container": ".entry-content"
+    },
+    "bypassPatterns": [
+      "hubcloud",
+      "drivecloud",
+      "pixeldrain",
+      "gdflix"
+    ]
+  },
+  {
+    "id": "movielinkbd",
+    "name": "MovieLinkBD",
+    "domain": "movielinkbd.pro",
+    "enabled": true,
+    "selectors": {
+      "title": "h1.entry-title, h1",
+      "poster": ".entry-content img, article img",
+      "links": "a[href*='download'], a[href*='drive'], a[href*='link'], .entry-content a",
+      "container": ".entry-content"
+    },
+    "bypassPatterns": [
+      "hubcloud",
+      "drivehub",
+      "fast-dl"
+    ]
+  },
+  {
+    "id": "site_1788092925193",
+    "name": "southfreak",
+    "domain": "southfreak.my",
+    "enabled": true,
+    "selectors": {
+      "title": "h1",
+      "poster": "img",
+      "links": "a",
+      "container": "body"
+    },
+    "bypassPatterns": [
+      "hubcloud",
+      "drivehub",
+      "pixeldrain"
+    ]
+  },
+  {
+    "id": "site_1788156982210",
+    "name": "movielinkbd",
+    "domain": "r5jewg.movielinkbd.li",
+    "enabled": true,
+    "selectors": {
+      "title": "h1",
+      "poster": "img",
+      "links": "a",
+      "container": "body"
+    },
+    "bypassPatterns": [
+      "hubcloud",
+      "drivehub",
+      "pixeldrain"
+    ]
+  }
+]
