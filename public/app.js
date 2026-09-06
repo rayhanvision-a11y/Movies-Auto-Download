@@ -18,9 +18,11 @@ createApp({
       showSiteModal: false,
       showFTPModal: false,
       showFAQModal: false,
+      showGuideModal: false,
       showContactModal: false,
       showDMCAModal: false,
       showPrivacyModal: false,
+      showBackToTop: false,
       visitorStats: {
         today: 0,
         thisWeek: 0,
@@ -124,12 +126,18 @@ createApp({
   },
 
   async mounted() {
+    window.addEventListener('scroll', () => {
+      this.showBackToTop = window.scrollY > 400;
+    });
     await this.fetchSites();
     await this.fetchAnalytics();
     await this.loadHomeFeed();
   },
 
   methods: {
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
     changePage(pageNum) {
       if (pageNum < 1 || pageNum > this.totalPages) return;
       this.currentPage = pageNum;
@@ -688,6 +696,12 @@ createApp({
     },
     closeFAQModal() {
       this.showFAQModal = false;
+    },
+    openGuideModal() {
+      this.showGuideModal = true;
+    },
+    closeGuideModal() {
+      this.showGuideModal = false;
     },
     openDMCAModal() {
       this.showDMCAModal = true;

@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MOVIESFLIX | Direct 1080p Auto-Downloader Engine</title>
   
+  <!-- Favicon Icons -->
+  <link rel="icon" type="image/jpeg" href="/favicon.jpg">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/favicon.jpg">
+  
   <!-- Google Search & SEO Meta Tags -->
   <meta name="google-site-verification" content="i9oZs_iDLKiy_tCnXNpWFc_8RwKChuzYvBGaAgc6f0A" />
   <meta name="description" content="MOVIESFLIX - Ad-Free Direct 1080p Movie & TV Series Auto-Downloader Engine. Bypass shortlinks, popups & extract 4K, 1080p, 720p direct MKV download links instantly.">
@@ -80,28 +85,35 @@
         </div>
 
         <!-- Navigation Menu (Far Right) -->
-        <nav class="flex items-center space-x-1 sm:space-x-3">
+        <nav class="flex items-center space-x-1 sm:space-x-2.5">
           <button @click="loadHomeFeed()" 
-                  class="px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 border border-brand-500/40 transition-all flex items-center gap-1 sm:gap-1.5 shadow-sm shadow-brand-950"
+                  class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 border border-brand-500/40 transition-all flex items-center gap-1 sm:gap-1.5 shadow-sm shadow-brand-950"
                   title="View Aggregated Home Feed">
             <i class="fa-solid fa-house text-brand-400"></i>
             <span class="hidden md:inline">Home Feed</span>
             <span class="md:hidden text-[10px]">Home</span>
           </button>
+          <button @click="openGuideModal()" 
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all flex items-center gap-1 sm:gap-1.5"
+                  title="Learn how to use MOVIESFLIX Engine">
+            <i class="fa-solid fa-circle-question text-cyan-400"></i>
+            <span class="hidden md:inline">How to Use</span>
+            <span class="md:hidden text-[10px]">Guide</span>
+          </button>
           <button @click="openFTPModal()" 
-                  class="px-2 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1 sm:gap-1.5">
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1 sm:gap-1.5">
             <i class="fa-solid fa-tower-cell text-amber-400"></i>
             <span class="hidden md:inline">FTP Servers</span>
             <span class="md:hidden text-[10px]">FTP</span>
           </button>
           <button @click="openSiteModal()" 
-                  class="px-2 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 transition-all flex items-center gap-1 sm:gap-1.5">
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 transition-all flex items-center gap-1 sm:gap-1.5">
             <i class="fa-solid fa-gear text-brand-400"></i>
             <span class="hidden md:inline">Sites ({{ sites.length }})</span>
             <span class="md:hidden text-[10px]">Sites</span>
           </button>
           <button @click="openContactModal()" 
-                  class="px-2 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 transition-all flex items-center gap-1 sm:gap-1.5">
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/30 transition-all flex items-center gap-1 sm:gap-1.5">
             <i class="fa-solid fa-envelope text-violet-400"></i>
             <span class="hidden md:inline">Contact Us</span>
             <span class="md:hidden text-[10px]">Contact</span>
@@ -828,6 +840,60 @@
       </div>
     </div>
 
+    <!-- User Guide / How to Use Modal -->
+    <div v-if="showGuideModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+              <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">কিভাবে MOVIESFLIX ব্যবহার করবেন (User Guide)</h3>
+              <p class="text-[11px] text-slate-400">Step-by-step guide to extract 1080p movies & series</p>
+            </div>
+          </div>
+          <button @click="closeGuideModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-full bg-brand-500/20 text-brand-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">১</div>
+            <div class="space-y-1">
+              <h4 class="font-bold text-white text-sm text-brand-400">মুভি বা সিরিজ খুঁজুন বা লিংক পেস্ট করুন</h4>
+              <p class="leading-relaxed">হোম ফিড থেকে যেকোনো মুভি/সিরিজের ওপর <strong class="text-white">Extract Files</strong> বাটনে ক্লিক করুন। অথবা টেস্ট সাইট থেকে যেকোনো সিঙ্গেল পোস্ট লিংক বক্সটিতে পেস্ট করে <strong class="text-brand-400">Bypass & Extract</strong> চাপুন।</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-full bg-cyan-500/20 text-cyan-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">২</div>
+            <div class="space-y-1">
+              <h4 class="font-bold text-white text-sm text-cyan-400">এডস ও পপআপ ছাড়াই ডাইরেক্ট লিংক পান</h4>
+              <p class="leading-relaxed">আমাদের ইঞ্জিন কোনো রিডাইরেক্ট বা এডস ছাড়াই ৩ সেকেন্ডে ৪K, ১০৮০p, ৭২০p, ৪৮০p ডাইরেক্ট .MKV বা .MP4 ফাইল লিংক বের করে দিবে।</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">৩</div>
+            <div class="space-y-1">
+              <h4 class="font-bold text-white text-sm text-emerald-400">১-ক্লিক ডাউনলোড বা IDM-এ পাঠান</h4>
+              <p class="leading-relaxed">উইন্ডোজ ইউজারেরা <strong class="text-emerald-400">Send All to IDM</strong> বা <strong class="text-cyan-400">Export IDM List (.ef2)</strong> বাটন দিয়ে সরাসরি আপনার IDM কিউতে ডাউনলোড শুরু করতে পারবেন।</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">৪</div>
+            <div class="space-y-1">
+              <h4 class="font-bold text-white text-sm text-amber-400">BDIX FTP সার্ভার ব্যবহার করুন</h4>
+              <p class="leading-relaxed">বাংলাদেশ থেকে দ্রুতগতির ডাউনলোডের জন্য ওপরের মেনুর <strong class="text-amber-400">FTP Servers</strong> বাটনে ক্লিক করে BDIX সার্ভার অটো-স্ক্যান করতে পারেন।</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- DMCA Notice Modal -->
     <div v-if="showDMCAModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -837,8 +903,8 @@
               <i class="fa-solid fa-shield-halved"></i>
             </div>
             <div>
-              <h3 class="text-sm font-bold text-white">DMCA & Copyright Compliance Policy</h3>
-              <p class="text-[11px] text-slate-400">Digital Millennium Copyright Act Notice</p>
+              <h3 class="text-sm font-bold text-white">DMCA & Third-Party Legal Disclaimer</h3>
+              <p class="text-[11px] text-slate-400">Digital Millennium Copyright Act Compliance Notice</p>
             </div>
           </div>
           <button @click="closeDMCAModal()" class="text-slate-400 hover:text-white p-1">
@@ -847,18 +913,23 @@
         </div>
 
         <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed">
-          <p><strong class="text-white">MOVIESFLIX Engine</strong> operates strictly as a search indexing and direct link parsing utility. We do not host, store, upload, or stream any copyrighted media files on our web servers.</p>
-          
+          <div class="p-4 bg-amber-950/40 border border-amber-500/40 rounded-xl space-y-1.5 text-amber-200">
+            <h4 class="font-bold text-amber-300 text-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Important Legal Disclaimer:
+            </h4>
+            <p><strong class="text-white">MOVIESFLIX Engine</strong> operates strictly as an automated link indexing and client-side URL parsing tool. <span class="underline font-bold text-white">WE DO NOT HOST, STORE, STREAM, UPLOAD, OR DISTRIBUTE ANY MEDIA FILES, VIDEOS, OR COPYRIGHTED CONTENT ON OUR SERVERS.</span> All movie titles, posters, metadata, and download links are extracted in real-time from publicly accessible third-party indexing sites and public API feeds.</p>
+          </div>
+
           <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
             <h4 class="font-bold text-white text-sm">Copyright Takedown Requests:</h4>
-            <p>If you are a copyright owner or an agent thereof and believe that any index link provided by our engine infringes upon your copyrights, please send a written takedown notice to our official contact email:</p>
+            <p>If you are a copyright owner or an agent thereof and believe that any indexed link parsed by our engine infringes upon your copyrights, please send a written takedown notice to our official contact email:</p>
             <div class="p-2.5 bg-slate-900 rounded-lg text-brand-300 font-mono font-bold flex items-center gap-2">
               <i class="fa-solid fa-envelope"></i>
               <a href="mailto:rayhanvision@gmail.com" class="hover:underline">rayhanvision@gmail.com</a>
             </div>
           </div>
 
-          <p>Please allow 24-48 business hours for a response and index removal upon receiving a valid request.</p>
+          <p>Please allow 24-48 business hours for a response and index URL removal upon receiving a valid request.</p>
         </div>
       </div>
     </div>
@@ -897,11 +968,15 @@
             <p>If you have any questions regarding privacy or data handling, reach out at <a href="mailto:rayhanvision@gmail.com" class="text-brand-300 hover:underline">rayhanvision@gmail.com</a>.</p>
           </div>
         </div>
-      </div>
-    </div>
+    <!-- Floating Back to Top Button -->
+    <button v-if="showBackToTop" @click="scrollToTop()"
+            class="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-brand-500 hover:bg-brand-600 text-white font-bold shadow-2xl shadow-brand-500/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-brand-400/50"
+            title="Scroll back to top">
+      <i class="fa-solid fa-arrow-up text-sm"></i>
+    </button>
 
   </div>
 
-  <script src="app.js?v=3.0"></script>
+  <script src="app.js?v=3.5"></script>
 </body>
 </html>
