@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moviesflix-a5bi.onrender.com/sitemap.xml
