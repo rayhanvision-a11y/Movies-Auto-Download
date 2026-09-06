@@ -57,6 +57,32 @@ app.use('/api/', (req, res, next) => {
   next();
 });
 
+// Google Search Verification & SEO Routes
+app.get('/googlei9oZs_iDLKiy_tCnXNpWFc_8RwKChuzYvBGaAgc6f0A.html', (req, res) => {
+  res.type('text/html').send('google-site-verification: googlei9oZs_iDLKiy_tCnXNpWFc_8RwKChuzYvBGaAgc6f0A.html');
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send('User-agent: *\nAllow: /\n\nSitemap: https://moviesflix-a5bi.onrender.com/sitemap.xml');
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://moviesflix-a5bi.onrender.com/</loc>
+    <lastmod>2026-09-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`);
+});
+
+app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Analytics API Route
 app.get('/api/analytics', (req, res) => {
   try {
