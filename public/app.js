@@ -763,6 +763,20 @@ createApp({
       } finally {
         this.contactLoading = false;
       }
+    },
+    getPosterUrl(poster) {
+      if (!poster || typeof poster !== 'string' || !poster.trim()) {
+        return '/default-poster.jpg';
+      }
+      if (poster.startsWith('/') || poster.startsWith('data:')) {
+        return poster;
+      }
+      return '/api/image-proxy?url=' + encodeURIComponent(poster);
+    },
+    handlePosterError(event) {
+      if (event && event.target) {
+        event.target.src = '/default-poster.jpg';
+      }
     }
   }
 }).mount('#app');
