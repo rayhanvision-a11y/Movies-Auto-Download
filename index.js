@@ -33,40 +33,20 @@ app.use((req, res, next) => {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// Lightweight Rate Limiter for API endpoints
-const rateLimitMap = new Map();
-app.use('/api/', (req, res, next) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 min window
-  const maxRequests = 250;
-
-  let record = rateLimitMap.get(ip);
-  if (!record || now - record.startTime > windowMs) {
-    record = { startTime: now, count: 1 };
-  } else {
-    record.count++;
-  }
-  rateLimitMap.set(ip, record);
-
-  if (record.count > maxRequests) {
-    return res.status(429).json({ success: false, error: 'Too many requests. Security rate limit reached.' });
-  }
-  next();
-});
-
-// Google Search Verification & SEO Routes
+// Google Search Verification & SEO Routes (Must be before express.static to avoid CDN caching)
 app.get('/googlei9oZs_iDLKiy_tCnXNpWFc_8RwKChuzYvBGaAgc6f0A.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.type('text/html').send('google-site-verification: googlei9oZs_iDLKiy_tCnXNpWFc_8RwKChuzYvBGaAgc6f0A.html');
 });
 
 app.get('/robots.txt', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.type('text/plain').send('User-agent: *\nAllow: /\n\nSitemap: https://moviesflix-a5bi.onrender.com/sitemap.xml');
 });
 
 app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">
   <url>
@@ -78,10 +58,12 @@ app.get('/sitemap.xml', (req, res) => {
 </urlset>`);
 });
 
-app.get('/', (req, res) => {
+app.get(['/', '/index.html'], (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Analytics API Route
 app.get('/api/analytics', (req, res) => {
