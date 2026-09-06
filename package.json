@@ -1,7 +1,7 @@
 {
-  "name": "movies-auto-download",
+  "name": "adfreemovies-engine",
   "version": "1.0.0",
-  "description": "",
+  "description": "Ad-Free 1080p Movie & TV Series Auto-Downloader Engine. Bypass shortlinks, popups & extract 4K, 1080p, 720p direct MKV download links with IDM & BDIX FTP integration.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
