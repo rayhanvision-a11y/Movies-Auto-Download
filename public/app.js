@@ -728,7 +728,7 @@ createApp({
         const formData = new FormData();
         formData.append('name', this.contactForm.name);
         formData.append('email', this.contactForm.email);
-        formData.append('_subject', `[MOVIESFLIX Contact] ${this.contactForm.subject || 'General Inquiry'} from ${this.contactForm.name}`);
+        formData.append('_subject', `[AdFreeMovies Contact] ${this.contactForm.subject || 'General Inquiry'} from ${this.contactForm.name}`);
         formData.append('subject', this.contactForm.subject || 'General Inquiry');
         formData.append('message', this.contactForm.message);
         formData.append('_captcha', 'false');
