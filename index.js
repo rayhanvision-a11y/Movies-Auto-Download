@@ -49,14 +49,12 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.header('Content-Type', 'application/xml; charset=utf-8');
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://moviesflix-a5bi.onrender.com/</loc>
     <lastmod>2026-09-06</lastmod>
-    <changefreq>always</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 </urlset>`);
