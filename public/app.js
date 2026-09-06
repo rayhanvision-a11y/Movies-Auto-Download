@@ -22,6 +22,7 @@ createApp({
       showContactModal: false,
       showDMCAModal: false,
       showPrivacyModal: false,
+      showMobileMenu: false,
       showBackToTop: false,
       visitorStats: {
         today: 0,
