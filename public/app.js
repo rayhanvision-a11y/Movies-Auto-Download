@@ -411,16 +411,31 @@ createApp({
         
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
+          this.triggerDirectDownload(dl);
           return;
         }
 
         const data = await res.json();
-        if (data.success) {
+        if (data && data.success) {
           console.log('🚀 Sent directly to IDM:', data.filename);
+        } else {
+          this.triggerDirectDownload(dl);
         }
       } catch (err) {
-        console.error('IDM send error:', err);
+        this.triggerDirectDownload(dl);
       }
+    },
+
+    triggerDirectDownload(dl) {
+      if (!dl || !dl.downloadUrl) return;
+      navigator.clipboard.writeText(dl.downloadUrl).catch(() => {});
+      const a = document.createElement('a');
+      a.href = dl.downloadUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     },
 
     async sendAllToIDM() {
