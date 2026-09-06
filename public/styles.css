@@ -132,3 +132,28 @@ body {
 .group:hover .card-shimmer::after {
   transform: rotate(30deg) translate(30%, 30%);
 }
+
+/* Mobile & Touch Responsive Enhancements */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  .glass-nav {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Prevent text overflow on small viewports */
+  h1, h2, h3, h4 {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Touch friendly button active states */
+  button:active, a:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
