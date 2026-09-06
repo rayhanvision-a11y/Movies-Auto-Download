@@ -535,8 +535,9 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <button @click="editSite(site)" class="p-2 text-slate-400 hover:text-brand-400 transition-colors" title="Edit Site"><i class="fa-solid fa-pen"></i></button>
-                  <button @click="removeSite(site.id)" class="p-2 text-slate-400 hover:text-rose-400 transition-colors" title="Delete Site"><i class="fa-solid fa-trash-can"></i></button>
+                  <button @click="editSite(site)" class="p-2 text-slate-400 hover:text-brand-400 transition-colors" title="Edit Site Rule"><i class="fa-solid fa-pen"></i></button>
+                  <button v-if="!site.isDefault" @click="removeSite(site.id)" class="p-2 text-slate-400 hover:text-rose-400 transition-colors" title="Delete Custom Site"><i class="fa-solid fa-trash-can"></i></button>
+                  <span v-else class="px-2 py-0.5 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md" title="Core default site (Protected)"><i class="fa-solid fa-shield-halved mr-1"></i>Core Protected</span>
                 </div>
               </div>
             </div>

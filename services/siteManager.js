@@ -47,6 +47,7 @@ function addSite(siteData) {
     name: siteData.name || 'Custom Site',
     domain: siteData.domain ? siteData.domain.replace(/https?:\/\//, '').replace(/\/.*$/, '').toLowerCase() : '',
     enabled: siteData.enabled !== undefined ? siteData.enabled : true,
+    isDefault: false,
     selectors: {
       title: siteData.selectors?.title || 'h1',
       poster: siteData.selectors?.poster || 'img',
@@ -69,6 +70,7 @@ function updateSite(id, updateData) {
   sites[index] = {
     ...sites[index],
     ...updateData,
+    isDefault: sites[index].isDefault || false,
     domain: updateData.domain ? updateData.domain.replace(/https?:\/\//, '').replace(/\/.*$/, '').toLowerCase() : sites[index].domain
   };
 
@@ -78,9 +80,16 @@ function updateSite(id, updateData) {
 
 function deleteSite(id) {
   const sites = getAllSites();
-  const filtered = sites.filter(s => s.id !== id);
-  if (sites.length === filtered.length) return false;
+  const siteToDelete = sites.find(s => s.id === id);
+  if (!siteToDelete) return false;
+  
+  // Protect core default sites (CineFreak, Movies4U, HDHub4U, MovieLinkBD, southfreak)
+  const defaultIds = ['cinefreak', 'movies4u', 'hdhub4u', 'movielinkbd', 'southfreak'];
+  if (siteToDelete.isDefault || defaultIds.includes(siteToDelete.id)) {
+    throw new Error('Core default sites cannot be deleted.');
+  }
 
+  const filtered = sites.filter(s => s.id !== id);
   saveSites(filtered);
   return true;
 }

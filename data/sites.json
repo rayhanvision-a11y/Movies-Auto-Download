@@ -4,6 +4,7 @@
     "name": "CineFreak",
     "domain": "cinefreak.net",
     "enabled": true,
+    "isDefault": true,
     "selectors": {
       "title": "h1.entry-title, h1.page-title, .title, head title",
       "poster": ".entry-content img, .post-thumbnail img, article img",
@@ -27,6 +28,7 @@
     "name": "Movies4U",
     "domain": "new5.movies4u.clinic",
     "enabled": true,
+    "isDefault": true,
     "selectors": {
       "title": "h1.entry-title, .entry-title, h1",
       "poster": ".entry-content img, .post-thumbnail img",
@@ -45,6 +47,7 @@
     "name": "HDHub4U",
     "domain": "new5.hdhub4u.cl",
     "enabled": true,
+    "isDefault": true,
     "selectors": {
       "title": "h1.entry-title, h1, .title",
       "poster": ".entry-content img, article img",
@@ -63,6 +66,7 @@
     "name": "MovieLinkBD",
     "domain": "movielinkbd.pro",
     "enabled": true,
+    "isDefault": true,
     "selectors": {
       "title": "h1.entry-title, h1",
       "poster": ".entry-content img, article img",
@@ -76,27 +80,11 @@
     ]
   },
   {
-    "id": "site_1788092925193",
+    "id": "southfreak",
     "name": "southfreak",
     "domain": "southfreak.my",
     "enabled": true,
-    "selectors": {
-      "title": "h1",
-      "poster": "img",
-      "links": "a",
-      "container": "body"
-    },
-    "bypassPatterns": [
-      "hubcloud",
-      "drivehub",
-      "pixeldrain"
-    ]
-  },
-  {
-    "id": "site_1788156982210",
-    "name": "movielinkbd",
-    "domain": "r5jewg.movielinkbd.li",
-    "enabled": true,
+    "isDefault": true,
     "selectors": {
       "title": "h1",
       "poster": "img",
