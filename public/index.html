@@ -474,13 +474,30 @@
 
         <!-- MODE 2: Direct File Download View (All Qualities) -->
         <div v-else class="p-4 sm:p-6">
-          <div class="flex items-center justify-between mb-3 sm:mb-4">
+          <div class="flex items-center justify-between mb-3 sm:mb-4 flex-wrap gap-2">
             <h3 class="text-xs sm:text-sm font-semibold text-slate-300">
-              Extracted Direct Files (4K, 1080p, 720p, 480p):
+              Extracted Direct Files & Episode Links:
             </h3>
-            <button @click="handleExtract(movieData.targetUrl)" class="text-[11px] sm:text-xs text-brand-400 hover:underline">
-              <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
-            </button>
+
+            <div class="flex items-center gap-2">
+              <!-- View Switcher -->
+              <div class="inline-flex rounded-lg bg-slate-950 p-1 border border-slate-800">
+                <button @click="downloadViewMode = 'grid'" 
+                        :class="downloadViewMode === 'grid' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold' : 'text-slate-400 hover:text-slate-200 border-transparent'"
+                        class="px-2.5 py-1 text-[11px] rounded-md transition-all flex items-center gap-1 border">
+                  <i class="fa-solid fa-border-all text-[10px]"></i> Grid Cards
+                </button>
+                <button @click="downloadViewMode = 'list'" 
+                        :class="downloadViewMode === 'list' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold' : 'text-slate-400 hover:text-slate-200 border-transparent'"
+                        class="px-2.5 py-1 text-[11px] rounded-md transition-all flex items-center gap-1 border">
+                  <i class="fa-solid fa-list-ul text-[10px]"></i> Detailed List
+                </button>
+              </div>
+
+              <button @click="handleExtract(movieData.targetUrl)" class="text-[11px] sm:text-xs text-brand-400 hover:underline ml-1">
+                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+              </button>
+            </div>
           </div>
 
           <!-- Ad Redirect Alert Notice Box -->
@@ -492,72 +509,152 @@
             </div>
           </div>
 
-          <div v-if="!movieData.downloads || !movieData.downloads.length" class="text-center py-10 text-slate-500">
+          <div v-if="!filteredDownloads || !filteredDownloads.length" class="text-center py-10 text-slate-500">
             <i class="fa-solid fa-file-excel text-3xl mb-2 text-rose-500/80"></i>
-            <p class="text-xs sm:text-sm font-medium text-slate-300">No direct download files found on this page.</p>
+            <p class="text-xs sm:text-sm font-medium text-slate-300">No direct 1080p download files found on this page.</p>
           </div>
 
-          <div v-else-if="movieData.downloads && movieData.downloads.length" class="grid grid-cols-1 gap-2.5 sm:gap-3">
-            <div v-for="(dl, idx) in movieData.downloads" :key="dl.id"
-                 class="p-3 sm:p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-brand-500/40 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
-              
-              <div class="flex items-start gap-2.5 sm:gap-3 min-w-0">
-                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-500/15 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">
-                  #{{ idx + 1 }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                      {{ dl.quality }}
-                    </span>
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      <i class="fa-solid fa-file-video text-[9px] mr-1"></i> Direct File (.MKV / .MP4)
+          <div v-else-if="filteredDownloads && filteredDownloads.length">
+            
+            <!-- GRID CARDS VIEW (Image 1 Style) -->
+            <div v-if="downloadViewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+              <div v-for="(dl, idx) in filteredDownloads" :key="dl.id"
+                   class="bg-[#121622]/95 hover:bg-[#161c2b] border border-slate-800/90 hover:border-amber-500/50 rounded-2xl p-4 transition-all duration-300 shadow-xl hover:shadow-[0_8px_25px_-8px_rgba(245,158,11,0.25)] flex flex-col justify-between group relative overflow-hidden">
+                
+                <div>
+                  <!-- Card Title -->
+                  <h3 class="text-xs sm:text-sm font-extrabold text-slate-100 text-center tracking-wide line-clamp-1 mb-2.5">
+                    {{ getDownloadCardInfo(dl, idx).title }}
+                  </h3>
+
+                  <!-- Season • Episode or Movie Info Badge Row -->
+                  <div v-if="getDownloadCardInfo(dl, idx).isSeries" class="flex items-center justify-between flex-wrap gap-1.5 mb-3 bg-[#0a0d14] p-2 rounded-xl border border-slate-800/80">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[#00e676] font-black text-sm sm:text-base tracking-wider">
+                        {{ getDownloadCardInfo(dl, idx).season }}
+                      </span>
+                      <span class="text-slate-600 font-bold text-xs">•</span>
+                      <span class="text-[#ffc107] font-bold text-xs sm:text-sm">
+                        {{ getDownloadCardInfo(dl, idx).episode }}
+                      </span>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold rounded-md bg-[#242f4c] text-indigo-200 border border-indigo-500/40 shadow-inner">
+                      {{ getDownloadCardInfo(dl, idx).audioBadge }}
                     </span>
                   </div>
-                  <h4 v-if="dl.movieTitle" class="text-xs text-brand-300 font-semibold mt-1 truncate">
-                    {{ dl.movieTitle }}
-                  </h4>
-                  <h4 class="text-xs sm:text-sm font-bold text-slate-100 mt-0.5 break-words">
-                    {{ dl.label }}
-                  </h4>
-                  
-                  <div class="mt-1 space-y-0.5 text-[10px] sm:text-[11px] text-slate-400">
-                    <p class="truncate text-brand-300/80 flex items-center gap-1.5" v-if="dl.postUrl">
-                      <i class="fa-solid fa-newspaper text-[10px] text-brand-400"></i>
-                      <span><strong>Movie Post:</strong> <a :href="dl.postUrl" target="_blank" class="hover:underline text-brand-300">{{ dl.postUrl }}</a></span>
-                    </p>
-                    <p class="truncate text-slate-500 flex items-center gap-1.5">
-                      <i class="fa-solid fa-link text-[10px] text-slate-500"></i>
-                      <span><strong>Target:</strong> {{ dl.downloadUrl }}</span>
-                    </p>
+
+                  <!-- Movie Badge Row (For Movies) -->
+                  <div v-else class="flex items-center justify-between flex-wrap gap-1.5 mb-3 bg-[#0a0d14] p-2 rounded-xl border border-slate-800/80">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[#00e676] font-black text-xs sm:text-sm tracking-wider flex items-center gap-1">
+                        <i class="fa-solid fa-film text-xs"></i> Full Movie
+                      </span>
+                      <span class="text-slate-600 font-bold text-xs">•</span>
+                      <span class="text-[#ffc107] font-bold text-xs sm:text-sm">
+                        {{ dl.quality || '1080p Full HD' }}
+                      </span>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold rounded-md bg-[#242f4c] text-indigo-200 border border-indigo-500/40 shadow-inner">
+                      {{ getDownloadCardInfo(dl, idx).audioBadge }}
+                    </span>
+                  </div>
+
+                  <!-- Specs Row (WEB-DL • AAC 2.0 • H264 • SoftSub) -->
+                  <div class="flex items-center justify-center flex-wrap gap-1.5 text-[10px] sm:text-[11px] font-bold mb-3.5 py-1.5 px-2 rounded-lg bg-[#080a10] border border-slate-900/80">
+                    <span class="text-[#ff9800]">{{ getDownloadCardInfo(dl, idx).specs.format }}</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="text-[#00bcd4]">{{ getDownloadCardInfo(dl, idx).specs.audio }}</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="text-[#e91e63]">{{ getDownloadCardInfo(dl, idx).specs.video }}</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="text-[#03a9f4]">{{ getDownloadCardInfo(dl, idx).specs.sub }}</span>
                   </div>
                 </div>
-              </div>
 
-              <!-- Action Buttons -->
-              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
-                <button @click="sendDirectToIDM(dl)" 
-                        class="flex-1 sm:flex-none px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-[#fb4c01] via-[#f97316] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-1.5"
-                        title="Start Direct File Download / Send to IDM with 0 Ads">
-                  <i class="fa-solid fa-cloud-arrow-down text-xs"></i>
-                  <span>Direct Download</span>
-                </button>
+                <!-- Action Buttons matching Image 1 -->
+                <div class="grid grid-cols-2 gap-2 mt-auto pt-1">
+                  <button @click="triggerDirectDownload(dl)" 
+                          class="w-full py-2 px-2.5 text-xs font-bold rounded-lg bg-[#182032] hover:bg-[#222d47] text-slate-200 border border-slate-700/90 transition-all duration-200 flex items-center justify-center gap-1 group-hover:border-slate-600"
+                          title="Start Direct File Download / IDM">
+                    <i class="fa-solid fa-download text-xs text-brand-400"></i>
+                    <span>Download</span>
+                  </button>
 
-                <button @click="copyToClipboard(dl.downloadUrl)" 
-                        class="px-2.5 sm:px-3 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 transition-all flex items-center justify-center gap-1"
-                        title="Copy direct file link to clipboard">
-                  <i class="fa-regular fa-copy text-brand-400"></i>
-                  <span class="hidden sm:inline">Copy URL</span>
-                </button>
+                  <button @click="sendDirectToIDM(dl)" 
+                          class="w-full py-2 px-2.5 text-xs font-bold rounded-lg bg-[#251f10] hover:bg-[#382e14] text-[#ffd54f] border border-[#ffb300]/80 shadow-[0_0_10px_rgba(255,179,0,0.15)] transition-all duration-200 flex items-center justify-center gap-1"
+                          title="Watch Online / Send to IDM">
+                    <i class="fa-solid fa-play text-[10px] text-amber-400"></i>
+                    <span>Watch Online</span>
+                  </button>
+                </div>
 
-                <a v-if="dl.postUrl" :href="dl.postUrl" target="_blank" rel="noopener noreferrer"
-                   class="px-2.5 py-2 text-[11px] font-semibold rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-amber-300 border border-slate-800 transition-all flex items-center justify-center gap-1"
-                   title="View original post">
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                  <span class="hidden sm:inline">Source</span>
-                </a>
               </div>
             </div>
+
+            <!-- DETAILED LIST VIEW (Image 2 Style) -->
+            <div v-else class="grid grid-cols-1 gap-2.5 sm:gap-3">
+              <div v-for="(dl, idx) in filteredDownloads" :key="dl.id"
+                   class="p-3 sm:p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-brand-500/40 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+                
+                <div class="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                  <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-500/15 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                    #{{ idx + 1 }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                        {{ dl.quality }}
+                      </span>
+                      <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <i class="fa-solid fa-file-video text-[9px] mr-1"></i> Direct File (.MKV / .MP4)
+                      </span>
+                    </div>
+                    <h4 v-if="dl.movieTitle" class="text-xs text-brand-300 font-semibold mt-1 truncate">
+                      {{ dl.movieTitle }}
+                    </h4>
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-100 mt-0.5 break-words">
+                      {{ dl.label }}
+                    </h4>
+                    
+                    <div class="mt-1 space-y-0.5 text-[10px] sm:text-[11px] text-slate-400">
+                      <p class="truncate text-brand-300/80 flex items-center gap-1.5" v-if="dl.postUrl">
+                        <i class="fa-solid fa-newspaper text-[10px] text-brand-400"></i>
+                        <span><strong>Movie Post:</strong> <a :href="dl.postUrl" target="_blank" class="hover:underline text-brand-300">{{ dl.postUrl }}</a></span>
+                      </p>
+                      <p class="truncate text-slate-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-link text-[10px] text-slate-500"></i>
+                        <span><strong>Target:</strong> {{ dl.downloadUrl }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
+                  <button @click="sendDirectToIDM(dl)" 
+                          class="flex-1 sm:flex-none px-3.5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-[#fb4c01] via-[#f97316] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-1.5"
+                          title="Start Direct File Download / Send to IDM with 0 Ads">
+                    <i class="fa-solid fa-cloud-arrow-down text-xs"></i>
+                    <span>Direct Download</span>
+                  </button>
+
+                  <button @click="copyToClipboard(dl.downloadUrl)" 
+                          class="px-2.5 sm:px-3 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 transition-all flex items-center justify-center gap-1"
+                          title="Copy direct file link to clipboard">
+                    <i class="fa-regular fa-copy text-brand-400"></i>
+                    <span class="hidden sm:inline">Copy URL</span>
+                  </button>
+
+                  <a v-if="dl.postUrl" :href="dl.postUrl" target="_blank" rel="noopener noreferrer"
+                     class="px-2.5 py-2 text-[11px] font-semibold rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-amber-300 border border-slate-800 transition-all flex items-center justify-center gap-1"
+                     title="View original post">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    <span class="hidden sm:inline">Source</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -565,72 +662,317 @@
 
     </main>
 
-    <!-- Site Management Modal (Add, Edit, Delete Sites) -->
-    <div v-if="showSiteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Full-Page Ultra-Modern Settings & Administration Control Center Modal -->
+    <div v-if="showSiteModal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-md">
+      <div class="bg-slate-900/95 border border-slate-800/90 w-full max-w-7xl h-[92vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         
         <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-sliders text-brand-400"></i>
-            Manage Movie Download Sites
-          </h3>
-          <button @click="showSiteModal = false" class="text-slate-400 hover:text-white text-lg">
+        <div class="px-6 py-4 border-b border-slate-800/90 flex items-center justify-between bg-slate-950/80">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500 to-amber-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 text-lg">
+              <i class="fa-solid fa-gear"></i>
+            </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-black text-white tracking-wide flex items-center gap-2">
+                <span>Engine Settings & Administration Control Center</span>
+                <span class="px-2 py-0.5 text-[10px] uppercase font-bold rounded-md bg-brand-500/20 text-brand-300 border border-brand-500/40">Full Page</span>
+              </h3>
+              <p class="text-xs text-slate-400">Configure movie sources, export/restore database backup, test FTP speed & view live analytics</p>
+            </div>
+          </div>
+
+          <button @click="showSiteModal = false" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white transition-all flex items-center justify-center text-lg">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
-        <!-- Modal Body -->
-        <div class="p-6 overflow-y-auto space-y-6 flex-grow">
-          
-          <!-- Add / Edit Site Form -->
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-            <h4 class="text-sm font-bold text-brand-400 mb-3 flex items-center gap-2">
-              <i class="fa-solid" :class="editingSiteId ? 'fa-pen-to-square' : 'fa-plus'"></i>
-              {{ editingSiteId ? 'Edit Site Configuration' : 'Add New Movie Site Rule' }}
-            </h4>
+        <!-- Navigation Tabs Bar -->
+        <div class="flex items-center gap-2 px-6 py-3 border-b border-slate-800/80 bg-slate-950/50 overflow-x-auto">
+          <button @click="settingsTab = 'sites'"
+                  class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border whitespace-nowrap"
+                  :class="settingsTab === 'sites' ? 'bg-gradient-to-r from-[#fb4c01] to-[#e03d00] text-white border-brand-500 shadow-md shadow-brand-500/20' : 'bg-slate-900 text-slate-400 hover:text-white border-slate-800 hover:border-slate-700'">
+            <i class="fa-solid fa-globe"></i>
+            <span>Movie Download Sites</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="settingsTab === 'sites' ? 'bg-black/30 text-white' : 'bg-slate-800 text-slate-300'">{{ sites.length }}</span>
+          </button>
 
-            <form @submit.prevent="saveSite" class="space-y-4">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-400 mb-1">Site Name:</label>
-                  <input type="text" v-model="siteForm.name" required placeholder="e.g. CineFreak" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+          <button @click="settingsTab = 'backup'"
+                  class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border whitespace-nowrap"
+                  :class="settingsTab === 'backup' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-slate-900 text-slate-400 hover:text-white border-slate-800 hover:border-slate-700'">
+            <i class="fa-solid fa-database"></i>
+            <span>Database Backup & Restore</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="settingsTab === 'backup' ? 'bg-black/30 text-white' : 'bg-emerald-500/20 text-emerald-300'">JSON</span>
+          </button>
+
+          <button @click="settingsTab = 'ftp'"
+                  class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border whitespace-nowrap"
+                  :class="settingsTab === 'ftp' ? 'bg-gradient-to-r from-amber-600 to-yellow-600 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-slate-900 text-slate-400 hover:text-white border-slate-800 hover:border-slate-700'">
+            <i class="fa-solid fa-tower-cell"></i>
+            <span>BDIX & FTP Scanners</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="settingsTab === 'ftp' ? 'bg-black/30 text-white' : 'bg-amber-500/20 text-amber-300'">15+</span>
+          </button>
+
+          <button @click="settingsTab = 'analytics'"
+                  class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border whitespace-nowrap"
+                  :class="settingsTab === 'analytics' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20' : 'bg-slate-900 text-slate-400 hover:text-white border-slate-800 hover:border-slate-700'">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Visitor & Engine Stats</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="settingsTab === 'analytics' ? 'bg-black/30 text-white' : 'bg-indigo-500/20 text-indigo-300'">Live</span>
+          </button>
+        </div>
+
+        <!-- Modal Body Content -->
+        <div class="p-6 overflow-y-auto flex-grow space-y-6">
+
+          <!-- TAB 1: MOVIE DOWNLOAD SITES -->
+          <div v-if="settingsTab === 'sites'" class="space-y-6">
+            <!-- Add / Edit Site Form -->
+            <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-lg">
+              <h4 class="text-sm font-bold text-brand-400 mb-3.5 flex items-center justify-between">
+                <span class="flex items-center gap-2">
+                  <i class="fa-solid" :class="editingSiteId ? 'fa-pen-to-square' : 'fa-plus'"></i>
+                  {{ editingSiteId ? 'Edit Site Configuration Rule' : 'Add New Movie Site Rule' }}
+                </span>
+                <span v-if="editingSiteId" class="text-xs font-normal text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">Editing Mode</span>
+              </h4>
+
+              <form @submit.prevent="saveSite" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Site Name:</label>
+                    <input type="text" v-model="siteForm.name" required placeholder="e.g. CineFreak" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Site Domain / Base URL:</label>
+                    <input type="text" v-model="siteForm.domain" required placeholder="e.g. cinefreak.net" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                  </div>
                 </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-400 mb-1">Site Domain / URL:</label>
-                  <input type="text" v-model="siteForm.domain" required placeholder="e.g. cinefreak.net" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                  <button v-if="editingSiteId" type="button" @click="resetSiteForm()" class="px-4 py-2 text-xs text-slate-400 hover:text-white rounded-lg bg-slate-900 border border-slate-800">Cancel Edit</button>
+                  <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-[#fb4c01] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-check"></i>
+                    <span>{{ editingSiteId ? 'Update Site Rule' : 'Add Site Rule' }}</span>
+                  </button>
                 </div>
+              </form>
+            </div>
+
+            <!-- Existing Configured Sites Grid -->
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <i class="fa-solid fa-list"></i>
+                  <span>Configured Movie Download Sites ({{ sites.length }})</span>
+                </h4>
+                <span class="text-[11px] text-slate-500">Default core sites are protected against accidental deletion</span>
               </div>
 
-              <div class="flex items-center justify-end gap-2 pt-2">
-                <button v-if="editingSiteId" type="button" @click="resetSiteForm()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white">Cancel Edit</button>
-                <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#fb4c01] to-[#e03d00] hover:from-[#e03d00] hover:to-[#ba2e00] text-white text-xs font-bold rounded-lg shadow-md shadow-brand-500/30">
-                  {{ editingSiteId ? 'Update Site' : 'Add Site' }}
-                </button>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div v-for="site in sites" :key="site.id" 
+                     class="p-4 bg-slate-950/90 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all flex items-center justify-between gap-3 shadow-md">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 text-brand-400 border border-slate-800 flex items-center justify-center font-bold text-sm shrink-0">
+                      <i class="fa-solid fa-film"></i>
+                    </div>
+                    <div class="min-w-0">
+                      <strong class="text-slate-100 text-sm block truncate">{{ site.name }}</strong>
+                      <span class="text-brand-300 font-mono text-[11px] truncate block">{{ site.domain }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button @click="editSite(site)" class="p-2 text-slate-400 hover:text-brand-400 transition-colors bg-slate-900 rounded-lg border border-slate-800" title="Edit Site Rule">
+                      <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button v-if="!site.isDefault" @click="removeSite(site.id)" class="p-2 text-slate-400 hover:text-rose-400 transition-colors bg-slate-900 rounded-lg border border-slate-800" title="Delete Custom Site">
+                      <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                    <span v-else class="px-2.5 py-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-1" title="Core default site (Protected)">
+                      <i class="fa-solid fa-shield-halved text-[9px]"></i> Core Protected
+                    </span>
+                  </div>
+                </div>
               </div>
-            </form>
+            </div>
           </div>
 
-          <!-- Existing Sites List -->
-          <div>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Configured Movie Sites ({{ sites.length }})</h4>
-            <div class="space-y-2">
-              <div v-for="site in sites" :key="site.id" class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-2">
-                  <strong class="text-slate-200 text-sm">{{ site.name }}</strong>
-                  <span class="text-brand-300 bg-brand-500/10 px-2.5 py-0.5 rounded-md font-mono text-[11px] border border-brand-500/20">{{ site.domain }}</span>
+          <!-- TAB 2: DATABASE BACKUP & RESTORE -->
+          <div v-if="settingsTab === 'backup'" class="space-y-6">
+            
+            <!-- Status Notice -->
+            <div v-if="backupStatusMsg" class="p-4 rounded-2xl border text-sm font-bold flex items-center gap-3 shadow-lg"
+                 :class="backupStatusMsg.startsWith('✅') ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200' : 'bg-rose-950/80 border-rose-500/50 text-rose-200'">
+              <i class="fa-solid" :class="backupStatusMsg.startsWith('✅') ? 'fa-circle-check text-emerald-400' : 'fa-triangle-exclamation text-rose-400'"></i>
+              <span>{{ backupStatusMsg }}</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <!-- Export Card -->
+              <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col justify-between space-y-4">
+                <div class="space-y-3">
+                  <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl shadow-inner">
+                    <i class="fa-solid fa-download"></i>
+                  </div>
+                  <h4 class="text-base font-bold text-white">Export Database Backup (.json)</h4>
+                  <p class="text-xs text-slate-400 leading-relaxed">
+                    Download a full 1-click JSON snapshot containing all configured movie download sites, custom regex extraction rules, visitor analytics counters, and user feedback contacts.
+                  </p>
+                </div>
+
+                <div class="pt-2">
+                  <button @click="exportDatabaseBackup()"
+                          class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-file-arrow-down text-sm"></i>
+                    <span>Download Database Backup</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Restore Card -->
+              <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col justify-between space-y-4">
+                <div class="space-y-3">
+                  <div class="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl shadow-inner">
+                    <i class="fa-solid fa-upload"></i>
+                  </div>
+                  <h4 class="text-base font-bold text-white">Restore Database Snapshot (.json)</h4>
+                  <p class="text-xs text-slate-400 leading-relaxed">
+                    Upload a previously saved backup file to restore sites, domains, and scraper configurations. Existing configuration will be safely updated and restored.
+                  </p>
+                </div>
+
+                <div class="pt-2 relative">
+                  <label class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/50 hover:border-amber-400 font-bold text-xs rounded-xl cursor-pointer shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wider text-center">
+                    <i class="fa-solid opacity-80" :class="backupRestoring ? 'fa-spinner animate-spin text-amber-400' : 'fa-file-arrow-up text-sm'"></i>
+                    <span>{{ backupRestoring ? 'Restoring Database...' : 'Select Backup File (.json)' }}</span>
+                    <input type="file" accept=".json" @change="triggerRestoreUpload($event)" class="hidden" :disabled="backupRestoring">
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Database Info Box -->
+            <div class="p-5 bg-slate-950/80 rounded-2xl border border-slate-800/90 space-y-2">
+              <h5 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-brand-400"></i>
+                <span>Automatic Storage Persistence & Security</span>
+              </h5>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                All site definitions and metrics are stored locally in atomic JSON files (<code class="text-brand-300 font-mono">data/sites.json</code>, <code class="text-brand-300 font-mono">data/analytics.json</code>, <code class="text-brand-300 font-mono">data/contacts.json</code>). You can safely export backups at any time before making structural changes or migrating servers.
+              </p>
+            </div>
+
+          </div>
+
+          <!-- TAB 3: BDIX & FTP SCANNERS -->
+          <div v-if="settingsTab === 'ftp'" class="space-y-4">
+            <div class="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800 flex-wrap gap-3">
+              <div>
+                <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i class="fa-solid fa-tower-cell text-amber-400"></i>
+                  <span>Bangladesh BDIX & Public FTP Movie Server Scanner</span>
+                </h4>
+                <p class="text-xs text-slate-400">Automated latency test & server availability monitor</p>
+              </div>
+
+              <button @click="scanFTPServers()" 
+                      :disabled="loadingFTP"
+                      class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 disabled:opacity-50">
+                <i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': loadingFTP}"></i>
+                <span>{{ loadingFTP ? 'Scanning FTPs...' : 'Run Live Latency Test' }}</span>
+              </button>
+            </div>
+
+            <div v-if="loadingFTP" class="text-center py-12">
+              <i class="fa-solid fa-spinner animate-spin text-3xl text-amber-400 mb-3"></i>
+              <p class="text-xs text-slate-300 font-semibold">Testing 15+ Bangladesh BDIX & Public FTP Movie Servers...</p>
+            </div>
+
+            <div v-if="!loadingFTP && ftpServers && ftpServers.length" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div v-for="srv in ftpServers" :key="srv.id" 
+                   class="p-4 bg-slate-950/90 rounded-2xl border border-slate-800/90 flex flex-col justify-between gap-3 hover:border-slate-700 transition-all">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <strong class="text-slate-100 text-sm">{{ srv.name }}</strong>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border"
+                          :class="srv.status === 'Online' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'">
+                      {{ srv.status }} <span v-if="srv.status === 'Online'">({{ srv.pingMs }}ms)</span>
+                    </span>
+                    <span v-if="fastestFtpServer && fastestFtpServer.id === srv.id" 
+                          class="px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[10px] font-black">
+                      <i class="fa-solid fa-bolt"></i> FASTEST
+                    </span>
+                  </div>
+                  <p class="text-xs text-indigo-400 font-mono truncate">{{ srv.domain }}</p>
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <button @click="editSite(site)" class="p-2 text-slate-400 hover:text-brand-400 transition-colors" title="Edit Site Rule"><i class="fa-solid fa-pen"></i></button>
-                  <button v-if="!site.isDefault" @click="removeSite(site.id)" class="p-2 text-slate-400 hover:text-rose-400 transition-colors" title="Delete Custom Site"><i class="fa-solid fa-trash-can"></i></button>
-                  <span v-else class="px-2 py-0.5 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md" title="Core default site (Protected)"><i class="fa-solid fa-shield-halved mr-1"></i>Core Protected</span>
+                  <a :href="srv.url" target="_blank" rel="noopener noreferrer" 
+                     class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-lg border border-slate-800 transition-all text-center">
+                    Test Server <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                  </a>
+                  <button v-if="!srv.isAdded" @click="addFTPServer(srv)" 
+                          class="flex-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow transition-all text-center">
+                    + Add to Sites
+                  </button>
+                  <span v-else class="flex-1 py-1.5 px-3 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 text-center">
+                    Added
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: VISITOR & ENGINE STATS -->
+          <div v-if="settingsTab === 'analytics'" class="space-y-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="p-5 bg-slate-950 rounded-2xl border border-slate-800 shadow-md space-y-1">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Today's Visitors</span>
+                <p class="text-2xl font-black text-emerald-400">{{ visitorStats.today }}</p>
+              </div>
+
+              <div class="p-5 bg-slate-950 rounded-2xl border border-slate-800 shadow-md space-y-1">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">This Week</span>
+                <p class="text-2xl font-black text-brand-400">{{ visitorStats.thisWeek }}</p>
+              </div>
+
+              <div class="p-5 bg-slate-950 rounded-2xl border border-slate-800 shadow-md space-y-1">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">This Month</span>
+                <p class="text-2xl font-black text-purple-400">{{ visitorStats.thisMonth }}</p>
+              </div>
+
+              <div class="p-5 bg-slate-950 rounded-2xl border border-slate-800 shadow-md space-y-1">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">All Time Total</span>
+                <p class="text-2xl font-black text-blue-400">{{ visitorStats.total }}</p>
+              </div>
+            </div>
+
+            <div class="p-6 bg-slate-950 rounded-3xl border border-slate-800 space-y-3">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-server text-indigo-400"></i>
+                <span>System Engine Status Summary</span>
+              </h4>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs">
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                  <span class="text-slate-400 block text-[11px]">Active Scrapers:</span>
+                  <strong class="text-white text-sm">{{ sites.length }} Movie Domains</strong>
+                </div>
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                  <span class="text-slate-400 block text-[11px]">Direct File Extraction:</span>
+                  <strong class="text-emerald-400 text-sm">1080p Full HD Engine</strong>
+                </div>
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                  <span class="text-slate-400 block text-[11px]">Backup & Recovery:</span>
+                  <strong class="text-amber-400 text-sm">1-Click JSON System</strong>
                 </div>
               </div>
             </div>
           </div>
 
         </div>
+
       </div>
     </div>
 

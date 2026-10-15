@@ -441,6 +441,77 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
+// 8. Database Backup & Restore System APIs
+app.get('/api/backup/export', (req, res) => {
+  try {
+    const sites = getAllSites();
+    const analyticsPath = path.join(__dirname, 'data', 'analytics.json');
+    const contactsPath = path.join(__dirname, 'data', 'contacts.json');
+
+    let analytics = {};
+    let contacts = [];
+
+    if (fs.existsSync(analyticsPath)) {
+      try { analytics = JSON.parse(fs.readFileSync(analyticsPath, 'utf8')); } catch (e) {}
+    }
+
+    if (fs.existsSync(contactsPath)) {
+      try { contacts = JSON.parse(fs.readFileSync(contactsPath, 'utf8')); } catch (e) {}
+    }
+
+    const backupData = {
+      app: 'AdFreeMovies Auto-Downloader Engine',
+      version: 'v3.6',
+      exportedAt: new Date().toISOString(),
+      sites,
+      analytics,
+      contacts
+    };
+
+    const fileName = `adfreemovies_backup_${new Date().toISOString().split('T')[0]}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(JSON.stringify(backupData, null, 2));
+  } catch (err) {
+    console.error('[Backup Export Error]:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/backup/restore', (req, res) => {
+  try {
+    const { backup } = req.body;
+    if (!backup || typeof backup !== 'object') {
+      return res.status(400).json({ success: false, error: 'Invalid backup file format' });
+    }
+
+    const dataDir = path.join(__dirname, 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    // Restore sites
+    if (Array.isArray(backup.sites)) {
+      fs.writeFileSync(path.join(dataDir, 'sites.json'), JSON.stringify(backup.sites, null, 2), 'utf8');
+    }
+
+    // Restore analytics
+    if (backup.analytics && typeof backup.analytics === 'object') {
+      fs.writeFileSync(path.join(dataDir, 'analytics.json'), JSON.stringify(backup.analytics, null, 2), 'utf8');
+    }
+
+    // Restore contacts
+    if (Array.isArray(backup.contacts)) {
+      fs.writeFileSync(path.join(dataDir, 'contacts.json'), JSON.stringify(backup.contacts, null, 2), 'utf8');
+    }
+
+    res.json({ success: true, message: '✅ Database backup restored successfully!' });
+  } catch (err) {
+    console.error('[Backup Restore Error]:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Serve frontend index.html for all other fallback routes
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

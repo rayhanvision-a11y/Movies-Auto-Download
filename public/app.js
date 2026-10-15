@@ -16,6 +16,9 @@ createApp({
       movieData: null,
       sites: [],
       showSiteModal: false,
+      settingsTab: 'sites',
+      backupRestoring: false,
+      backupStatusMsg: null,
       showFTPModal: false,
       showFAQModal: false,
       showGuideModal: false,
@@ -46,6 +49,7 @@ createApp({
       manuallyIgnoredSunplex: JSON.parse(localStorage.getItem('sunplex_manually_ignored') || '[]'),
       currentPage: 1,
       itemsPerPage: 20,
+      downloadViewMode: 'grid',
       siteForm: {
         name: '',
         domain: '',
@@ -123,6 +127,68 @@ createApp({
         pages.push(i);
       }
       return pages;
+    },
+    filteredDownloads() {
+      if (!this.movieData || !this.movieData.downloads || !this.movieData.downloads.length) return [];
+      
+      // 1. Filter out 480p, 720p, 360p, 4k
+      const initial = this.movieData.downloads.filter(dl => {
+        const q = (dl.quality || '').toLowerCase();
+        const label = (dl.label || '').toLowerCase();
+        const ctx = (dl.qualityContext || '').toLowerCase();
+        const full = `${q} ${label} ${ctx}`;
+
+        if (full.includes('480p') || full.includes('360p') || full.includes('720p') || full.includes('2160p') || full.includes('4k')) {
+          if (!full.includes('1080p')) return false;
+        }
+        return true;
+      });
+
+      // 2. Deduplicate multiple link mirrors per episode
+      const parseEpNum = (dl) => {
+        const text = `${dl.label || ''} ${dl.movieTitle || ''} ${dl.qualityContext || ''}`;
+        const m = text.match(/\bS\d{1,2}\s*(?:E|EP)\s*(\d{1,3})\b/i) || 
+                  text.match(/\bSeason\s*\d{1,2}\s*(?:Episode|EP|E)\s*(\d{1,3})\b/i) ||
+                  text.match(/\b(?:Episode|EP)\s*(\d{1,3})\b/i) ||
+                  text.match(/\[S\d{1,2}E(\d{1,3})\]/i);
+        if (m) return parseInt(m[1], 10);
+        return null;
+      };
+
+      const episodeMap = new Map();
+      const unassigned = [];
+
+      initial.forEach(dl => {
+        const epNum = parseEpNum(dl);
+        const urlLower = (dl.downloadUrl || '').toLowerCase();
+        const isDirectVideo = urlLower.includes('.mkv') || urlLower.includes('.mp4') || urlLower.includes('cloudflarestorage.com') || urlLower.includes('r2.dev') || urlLower.includes('b-cdn.net') || urlLower.includes('pixeldrain.com');
+
+        if (epNum !== null) {
+          if (!episodeMap.has(epNum)) {
+            episodeMap.set(epNum, dl);
+          } else {
+            const existing = episodeMap.get(epNum);
+            const existingUrl = (existing.downloadUrl || '').toLowerCase();
+            const existingIsDirect = existingUrl.includes('.mkv') || existingUrl.includes('.mp4') || existingUrl.includes('cloudflarestorage.com') || existingUrl.includes('r2.dev') || existingUrl.includes('b-cdn.net') || existingUrl.includes('pixeldrain.com');
+            
+            if (isDirectVideo && !existingIsDirect) {
+              episodeMap.set(epNum, dl);
+            }
+          }
+        } else {
+          const cleanUrl = dl.downloadUrl.split('?')[0];
+          if (!unassigned.some(item => item.downloadUrl.split('?')[0] === cleanUrl)) {
+            unassigned.push(dl);
+          }
+        }
+      });
+
+      if (episodeMap.size > 0) {
+        const sortedEpNums = Array.from(episodeMap.keys()).sort((a, b) => a - b);
+        return sortedEpNums.map(num => episodeMap.get(num));
+      }
+
+      return unassigned;
     }
   },
 
@@ -438,18 +504,22 @@ createApp({
     triggerDirectDownload(dl) {
       if (!dl || !dl.downloadUrl) return;
       navigator.clipboard.writeText(dl.downloadUrl).catch(() => {});
+      const proxyUrl = this.getDownloadHref(dl);
       const a = document.createElement('a');
-      a.href = dl.downloadUrl;
+      a.href = proxyUrl;
+      a.setAttribute('download', (dl.label || 'video.mkv'));
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      setTimeout(() => {
+        if (document.body.contains(a)) document.body.removeChild(a);
+      }, 200);
     },
 
     async sendAllToIDM() {
       if (!this.movieData || !this.movieData.downloads || !this.movieData.downloads.length) return;
-      const downloads = this.movieData.downloads;
+      const downloads = this.filteredDownloads.length ? this.filteredDownloads : this.movieData.downloads;
       for (const dl of downloads) {
         if (!dl.downloadUrl) continue;
         const proxyUrl = window.location.origin + this.getDownloadHref(dl);
@@ -468,9 +538,10 @@ createApp({
     },
 
     downloadAll() {
-      if (!this.movieData || !this.movieData.downloads || !this.movieData.downloads.length) return;
+      const downloads = this.filteredDownloads.length ? this.filteredDownloads : (this.movieData ? this.movieData.downloads : []);
+      if (!downloads || !downloads.length) return;
 
-      this.movieData.downloads.forEach((dl, i) => {
+      downloads.forEach((dl, i) => {
         setTimeout(() => {
           const proxyUrl = this.getDownloadHref(dl);
           const a = document.createElement('a');
@@ -490,6 +561,132 @@ createApp({
       }).catch(err => {
         console.error('Copy failed:', err);
       });
+    },
+
+    getDownloadCardInfo(dl, idx) {
+      if (!dl) return { title: '', season: 'S01', episode: 'Episode 01', audioBadge: 'Bengali ORG', specs: { format: 'WEB-DL', audio: 'AAC 2.0', video: 'H264', sub: 'SoftSub' } };
+
+      const mainTitle = (this.movieData && this.movieData.title) ? this.movieData.title : (dl.movieTitle || dl.label || 'Movie');
+      
+      // Exclude raw downloadUrl from regex parsing to prevent hex hashes (e.g. e86, e65) from matching as episode numbers!
+      const readableText = `${mainTitle} ${dl.movieTitle || ''} ${dl.label || ''} ${dl.qualityContext || ''}`;
+
+      // 1. Clean Title: Keep clean name with year like "Sultan Salahuddin Ayyubi (2026)"
+      let cleanTitle = mainTitle;
+      cleanTitle = cleanTitle
+        .replace(/bengali\s*dubbed.*/gi, '')
+        .replace(/bangla\s*dubbed.*/gi, '')
+        .replace(/bongobd\s*original.*/gi, '')
+        .replace(/web\s*series.*/gi, '')
+        .replace(/season\s*\d+.*/gi, '')
+        .replace(/s0?\d+.*/gi, '')
+        .replace(/download\s*&.*/gi, '')
+        .replace(/\[.*\]/g, '')
+        .replace(/-\s*(cinefreak|movies4u|hdhub4u|movielinkbd|southfreak|sunplex).*/gi, '')
+        .trim();
+
+      const yearMatch = readableText.match(/\((19|20)\d{2}\)|\b(19|20)\d{2}\b/);
+      if (yearMatch && !cleanTitle.includes(yearMatch[0])) {
+        const yr = yearMatch[0].startsWith('(') ? yearMatch[0] : `(${yearMatch[0]})`;
+        cleanTitle = `${cleanTitle} ${yr}`;
+      }
+      if (!cleanTitle) cleanTitle = dl.movieTitle || 'Movie Title';
+
+      // 2. Detect Content Type: Movie vs Series
+      const textLower = readableText.toLowerCase();
+      let isSeries = false;
+
+      if (
+        textLower.includes('season') ||
+        textLower.includes('series') ||
+        textLower.includes('episode') ||
+        /\bs0?\d+/i.test(textLower) ||
+        /\be0?\d+/i.test(textLower) ||
+        textLower.includes('k-drama') ||
+        textLower.includes('kdrama') ||
+        textLower.includes('j-drama') ||
+        textLower.includes('c-drama') ||
+        textLower.includes('weekly')
+      ) {
+        if (textLower.includes('full movie') && !textLower.includes('season') && !textLower.includes('episode') && !textLower.includes('series')) {
+          isSeries = false;
+        } else {
+          isSeries = true;
+        }
+      } else {
+        isSeries = false;
+      }
+
+      // 3. Season (S01, S02) - Only if series
+      let season = 'S01';
+      const sMatch = readableText.match(/\bS(\d{1,2})\b/i) || readableText.match(/\bSeason\s*(\d{1,2})\b/i);
+      if (sMatch) {
+        season = `S${String(parseInt(sMatch[1], 10)).padStart(2, '0')}`;
+      }
+
+      // 4. Episode Extraction - Only if series
+      let episode = '';
+      if (isSeries) {
+        const sEpMatch = readableText.match(/\bS\d{1,2}\s*(?:E|EP)\s*(\d{1,3})\b/i) || readableText.match(/\bSeason\s*\d{1,2}\s*(?:Episode|EP|E)\s*(\d{1,3})\b/i);
+        const epMatch = readableText.match(/\b(?:Episode|EP)\s*(\d{1,3})\b/i) || readableText.match(/(?:^|[^\w])E(\d{1,3})(?:[^\w]|$)/i);
+
+        if (sEpMatch) {
+          episode = `Episode ${String(parseInt(sEpMatch[1], 10)).padStart(2, '0')}`;
+        } else if (epMatch) {
+          episode = `Episode ${String(parseInt(epMatch[1], 10)).padStart(2, '0')}`;
+        } else {
+          episode = `Episode ${String((idx !== undefined ? idx : 0) + 1).padStart(2, '0')}`;
+        }
+      }
+
+      // 5. Audio / Language Badge
+      let audioBadge = 'Bengali ORG';
+      if (/bengali\s*sub|bangla\s*sub|esub/i.test(readableText)) {
+        audioBadge = 'Bengali Sub';
+      } else if (/bengali\s*org|bangla\s*org/i.test(readableText)) {
+        audioBadge = 'Bengali ORG';
+      } else if (/bongobd\s*original|bongobd/i.test(readableText)) {
+        audioBadge = 'Bengali ORG';
+      } else if (/dual\s*audio/i.test(readableText)) {
+        audioBadge = 'Dual Audio';
+      } else if (/hindi\s*dubbed|hindi\s*org|hindi/i.test(readableText)) {
+        audioBadge = 'Hindi ORG';
+      } else if (/english/i.test(readableText)) {
+        audioBadge = 'English';
+      } else if (/bengali|bangla/i.test(readableText)) {
+        audioBadge = 'Bengali ORG';
+      }
+
+      // 6. Tech Specs
+      let format = 'WEB-DL';
+      if (/bluray/i.test(readableText)) format = 'BluRay';
+      else if (/webrip/i.test(readableText)) format = 'WEBRip';
+      else if (/hdrip/i.test(readableText)) format = 'HDRip';
+      else if (/hdts|hd-ts|ts/i.test(readableText)) format = 'HDTS';
+      else if (/hdtv/i.test(readableText)) format = 'HDTV';
+
+      let audio = 'AAC 2.0';
+      if (/aac\s*5\.1/i.test(readableText)) audio = 'AAC 5.1';
+      else if (/dd\+?\s*5\.1|eac3/i.test(readableText)) audio = 'DD+ 5.1';
+      else if (/dts/i.test(readableText)) audio = 'DTS';
+
+      let video = 'H264';
+      if (/x264|h264|avc/i.test(readableText)) video = 'H264';
+      else if (/hevc|x265|h265/i.test(readableText)) video = 'HEVC';
+
+      let sub = 'SoftSub';
+      if (/hardsub|hc-esub/i.test(readableText)) sub = 'HardSub';
+      else if (/esub|esubs/i.test(readableText)) sub = 'ESub';
+      else if (/nosub/i.test(readableText)) sub = 'NoSub';
+
+      return {
+        title: cleanTitle,
+        isSeries,
+        season,
+        episode,
+        audioBadge,
+        specs: { format, audio, video, sub }
+      };
     },
 
     openFTPModal() {
@@ -590,6 +787,64 @@ createApp({
         }
       } catch (err) {
         alert('Failed to delete site: ' + err.message);
+      }
+    },
+
+    async exportDatabaseBackup() {
+      try {
+        const res = await fetch('/api/backup/export');
+        if (!res.ok) throw new Error('Failed to export backup');
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `adfree_movies_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Failed to export backup: ' + err.message);
+      }
+    },
+
+    async triggerRestoreUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!confirm(`Are you sure you want to restore database from "${file.name}"? This will overwrite site configurations and settings.`)) {
+        event.target.value = '';
+        return;
+      }
+
+      this.backupRestoring = true;
+      this.backupStatusMsg = 'Restoring database from backup file...';
+
+      try {
+        const text = await file.text();
+        const backupData = JSON.parse(text);
+
+        const res = await fetch('/api/backup/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(backupData)
+        });
+        const data = await res.json();
+        if (data.success) {
+          this.backupStatusMsg = '✅ Database successfully restored! Reloading configuration...';
+          await this.fetchSites();
+          await this.fetchAnalytics();
+          setTimeout(() => {
+            this.backupStatusMsg = null;
+          }, 3500);
+        } else {
+          throw new Error(data.error || 'Restore failed');
+        }
+      } catch (err) {
+        this.backupStatusMsg = '❌ Error: ' + err.message;
+        alert('Backup restore failed: ' + err.message);
+      } finally {
+        this.backupRestoring = false;
+        event.target.value = '';
       }
     },
 

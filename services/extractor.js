@@ -158,12 +158,12 @@ function cleanTitle(rawTitle) {
 
 function detectQuality(text) {
   const t = text.toLowerCase();
+  if (t.includes('1080p') || (t.includes('1080') && !t.includes('2160'))) return '1080p Full HD';
   if (t.includes('2160p') || t.includes('4k')) return '4K / 2160p';
-  if (t.includes('1080p') || t.includes('fhd') || t.includes('264')) return '1080p Full HD';
   if (t.includes('720p') || t.includes('hd')) return '720p HD';
   if (t.includes('480p') || t.includes('sd')) return '480p SD';
-  if (t.includes('300mb') || t.includes('400mb') || t.includes('hevc')) return '720p HEVC / SD';
-  return 'Direct Link / Multi-Quality';
+  if (t.includes('300mb') || t.includes('400mb')) return '720p HEVC / SD';
+  return '1080p Full HD';
 }
 
 function detectContentType(title, postUrl) {
@@ -312,8 +312,8 @@ async function resolveDirectLink(rawUrl, depth = 0) {
       } catch (e) {}
     }
 
-    // 5. Handle m4ulinks / techzed / bdplex / multicloudlinks intermediate multi-link page
-    if (currentUrl.includes('m4ulinks') || currentUrl.includes('techzed') || currentUrl.includes('bdplex') || currentUrl.includes('multicloudlinks')) {
+    // 5. Handle m4ulinks / techzed / bdplex / multicloudlinks / hubdrive / hubcdn / greenmotors intermediate multi-link page
+    if (currentUrl.includes('m4ulinks') || currentUrl.includes('techzed') || currentUrl.includes('bdplex') || currentUrl.includes('multicloudlinks') || currentUrl.includes('hubdrive') || currentUrl.includes('hubcdn') || currentUrl.includes('greenmotors')) {
       try {
         const res = await axios.get(currentUrl, { headers: defaultHeaders, timeout: 10000 });
         const $ = cheerio.load(res.data);
@@ -490,6 +490,11 @@ async function processSinglePostPage(postUrl, refererUrl) {
         hrefLower.includes('techzed') ||
         hrefLower.includes('techm') ||
         hrefLower.includes('hubcloud') ||
+        hrefLower.includes('hubdrive') ||
+        hrefLower.includes('hubcdn') ||
+        hrefLower.includes('greenmotors') ||
+        hrefLower.includes('hubstream') ||
+        hrefLower.includes('4khdhub') ||
         hrefLower.includes('drivehub') ||
         hrefLower.includes('pixeldrain') ||
         hrefLower.includes('fast-dl') ||
@@ -521,7 +526,9 @@ async function processSinglePostPage(postUrl, refererUrl) {
         hrefLower.includes('tinyurl.com') ||
         hrefLower.includes('/category/') ||
         hrefLower.includes('/tag/') ||
-        hrefLower.includes('/page/');
+        hrefLower.includes('/page/') ||
+        hrefLower === 'https://4khdhub.one/' ||
+        hrefLower === 'https://4khdhub.one';
 
       if (isDownloadBtn && !isNav) {
         const parentContext = $(el).closest('.dlbtn-container, p, div').text().trim().replace(/\s+/g, ' ');
@@ -1033,13 +1040,63 @@ async function extractMovie(targetUrl, page = 1) {
                    fullTextCtx.includes('10bit') || 
                    fullTextCtx.includes('10-bit');
 
-    if (!isHevc) {
+    // Exclude 480p, 360p, 720p, 2160p, 4k unless 1080p is present
+    const isOtherRes = (fullTextCtx.includes('480p') || fullTextCtx.includes('360p') || fullTextCtx.includes('720p') || fullTextCtx.includes('2160p') || fullTextCtx.includes('4k')) && !fullTextCtx.includes('1080p');
+
+    if (!isHevc && !isOtherRes) {
       seen.add(item.downloadUrl);
       validDownloads.push(item);
     }
   }
 
-  console.log(`[Extractor] Single Post Extraction Complete! Total Direct Files: ${validDownloads.length}`);
+  // Deduplicate multiple mirror links per episode
+  const episodeMap = new Map();
+  const unassigned = [];
+
+  const parseEpNum = (item) => {
+    const text = `${item.label || ''} ${item.movieTitle || ''} ${item.qualityContext || ''}`;
+    const m = text.match(/\bS\d{1,2}\s*(?:E|EP)\s*(\d{1,3})\b/i) || 
+              text.match(/\bSeason\s*\d{1,2}\s*(?:Episode|EP|E)\s*(\d{1,3})\b/i) ||
+              text.match(/\b(?:Episode|EP)\s*(\d{1,3})\b/i) ||
+              text.match(/\[S\d{1,2}E(\d{1,3})\]/i);
+    if (m) return parseInt(m[1], 10);
+    return null;
+  };
+
+  validDownloads.forEach(item => {
+    const epNum = parseEpNum(item);
+    const urlLower = (item.downloadUrl || '').toLowerCase();
+    const isDirectVideo = urlLower.includes('.mkv') || urlLower.includes('.mp4') || urlLower.includes('cloudflarestorage.com') || urlLower.includes('r2.dev') || urlLower.includes('b-cdn.net') || urlLower.includes('pixeldrain.com');
+
+    if (epNum !== null) {
+      if (!episodeMap.has(epNum)) {
+        episodeMap.set(epNum, item);
+      } else {
+        const existing = episodeMap.get(epNum);
+        const existingUrl = (existing.downloadUrl || '').toLowerCase();
+        const existingIsDirect = existingUrl.includes('.mkv') || existingUrl.includes('.mp4') || existingUrl.includes('cloudflarestorage.com') || existingUrl.includes('r2.dev') || existingUrl.includes('b-cdn.net') || existingUrl.includes('pixeldrain.com');
+        
+        if (isDirectVideo && !existingIsDirect) {
+          episodeMap.set(epNum, item);
+        }
+      }
+    } else {
+      const cleanUrl = item.downloadUrl.split('?')[0];
+      if (!unassigned.some(i => i.downloadUrl.split('?')[0] === cleanUrl)) {
+        unassigned.push(item);
+      }
+    }
+  });
+
+  let finalDownloads = validDownloads;
+  if (episodeMap.size > 0) {
+    const sortedEpNums = Array.from(episodeMap.keys()).sort((a, b) => a - b);
+    finalDownloads = sortedEpNums.map(num => episodeMap.get(num));
+  } else {
+    finalDownloads = unassigned;
+  }
+
+  console.log(`[Extractor] Single Post Extraction Complete! Total Clean Episode Files: ${finalDownloads.length}`);
 
   return {
     success: true,
@@ -1048,8 +1105,8 @@ async function extractMovie(targetUrl, page = 1) {
     targetUrl,
     title: $('h1.entry-title, h1.post-title, h1, title').first().text().trim().replace(/\s+/g, ' '),
     poster,
-    totalFound: validDownloads.length,
-    downloads: validDownloads
+    totalFound: finalDownloads.length,
+    downloads: finalDownloads
   };
 }
 
